@@ -1,313 +1,267 @@
-# 第四章：关键技术底座篇 —— Prompt、RAG、Tool Calling 与微调实战
+# 第 4 章：连接现实世界 —— Tool Calling 与大模型微调实操
 
-> **导读**：本章是全套教程中**代码与工程实操密度最高**的一章。我们将深入剖析让 Agent 稳定落地的四大技术支柱：**Prompt Cache 技术、工业级 RAG 检索链路、OpenAI/MCP 工具调用协议**，以及如何利用微调（Fine-Tuning）与传统模型强化 Agent 的工具调用与意图识别能力。
-
----
-
-## 4.1 提示工程进阶：结构化输出与 Prompt Cache
-
-### 1. 结构化输出（Structured Outputs）
-在业务系统中，非结构化的闲聊文本极难被程序化消费。必须使用 Pydantic 或 JSON Schema 强制大模型输出合规数据。
-
-```python
-from pydantic import BaseModel, Field
-from typing import List, Optional
-
-class CustomerIntent(BaseModel):
-    intent_type: str = Field(
-        description="意图分类: inquiry(咨询), refund(退款), complaint(投诉), other(其他)"
-    )
-    confidence: float = Field(description="模型对该意图的置信度打分 0.0 到 1.0")
-    order_id: Optional[str] = Field(default=None, description="识别出的订单编号")
-    urgency_level: int = Field(default=1, description="紧迫等级 1~5，5为最紧急")
-    key_entities: List[str] = Field(default_factory=list, description="提取的关键词实体")
-```
-
-### 2. Prompt Cache（前缀缓存）的革命性价值
-在复杂 Agent 场景中，System Prompt、数十个工具的元数据描述（Tool Schemas）以及先验领域知识往往长达上万 Tokens。每次对话都重新计算这些上下文，既昂贵又缓慢。
-
-- **工作机制**：主流厂商（Anthropic Claude、DeepSeek、OpenAI）对完全一致的 Prompt 前缀直接命中显存中的 KV Cache。
-- **降本增效**：
-  - 首字延迟（TTFT）降低 **60%~80%**；
-  - 缓存命中的输入 Token 计费通常仅为原价的 **10%~20%**。
-- **最佳实践**：
-  - **静态前置**：将通用的系统角色定义、静态知识、工具定义严格置于提示词最前部；
-  - **动态后置**：将易变的用户输入、当前时间、动态会话记录置于末尾，保证最大前缀长度命中。
+> **本章核心目标**：彻底理解 Tool / Function Calling 的底层本质（为什么大模型绝对不会直接运行你的系统代码）；掌握工业级 JSON Schema 编写技巧与 5 步数据交互全闭环；掌握开源大模型工具微调（XTuner 规范）与在网关层使用轻量级 BERT 模型拦截 60% 高频请求实现大幅降本的核心工程方案。
 
 ---
 
-## 4.2 工业级 RAG 检索流水线实战
+## 一、 核心概念剖析：Tool Calling 与微调的底层真相
 
-很多开发者发现自己的 RAG 系统经常“答非所问”，根源在于仅使用了简单的余弦相似度检索。工业级 RAG 必须采用**切分 $\rightarrow$ 混合检索 $\rightarrow$ 重排序（Rerank）**的标准化三级链路。
+### 1.1 核心真相：大模型到底是如何“调用工具”的？
+初学者最大的误区之一是以为“大模型成精了，能够直接侵入服务器去跑一段 Python 脚本或连进 MySQL”。
 
-```mermaid
-flowchart TD
-    Doc[原始企业文档: PDF / Word / Markdown] --> Clean[文档解析与噪音过滤]
-    Clean --> Chunk[语义分块 Chunking\n大小: 600 tokens, 重叠: 100 tokens]
-    
-    Chunk --> Emb[Embedding 向量化\ntext-embedding-v2 / BGE]
-    Chunk --> Sparse[构建稀疏词频索引\nBM25 / Elasticsearch]
-    
-    Emb --> VDB[(向量数据库\nQdrant / Milvus / Chroma)]
-    
-    Query[用户提问: 包含行业专有编号/专有名词] --> Search
-    
-    subgraph Search[混合检索阶段 Hybrid Search]
-        direction LR
-        VDB -->|语义召回 Top 50| DenseRes[稠密结果集]
-        Sparse -->|关键词精确召回 Top 50| SparseRes[稀疏结果集]
-        DenseRes & SparseRes --> RRF[RRF 倒数排名融合算法]
-    end
-    
-    RRF --> Rerank[交叉编码器重排序 Cross-Encoder\nBGE-Reranker-Large 打分]
-    Rerank --> Filter[过滤阈值 Score > 0.65\n取最相关 Top 3 片段]
-    Filter --> Prompt[注入 Agent 提示词上下文]
-```
+**底层真相只有一句话：大语言模型（LLM）从头到尾只做了一件事 —— 文本概率预测与结构化 JSON 生成。**
 
-### 生产级切分与检索配置参考表（对应 5.jpeg）
-| 配置项 | 推荐值 | 技术解释 |
-| :--- | :--- | :--- |
-| **分段设置** | 通用分块（600 Tokens，100 重叠） | 保证段落逻辑完整，重叠区防止语义截断 |
-| **索引方式** | 高质量（High Quality） | 自动剔除 HTML 标签、特殊不可见字符与冗余空白 |
-| **Embedding 模型** | `text-embedding-v2` / `bge-large-zh-v1.5` | 维度通常为 1024/1536，兼顾泛化性与长句表征 |
-| **检索设置** | 混合检索（Hybrid Search） | 兼顾专有名词精确匹配与模糊概念联想 |
-| **重排序 (Rerank)** | `bge-reranker-large` | 解决向量只看距离而不看前后文深层语义关联的缺陷 |
-
----
-
-## 4.3 Tool Calling 与 Function Calling 原理及本地执行闭环
-
-> 核心铁律：大语言模型（LLM）**绝对不能也不会直接去执行你的 Python 函数或操作系统命令**。模型做的事情只有一个：**根据你的函数入参规范，输出一段精确的 JSON 字符串**。
-
-### 完整执行数据闭环（对应 10.jpeg）
+真正的工具调用全流程如下：
+1. **开发者**：向大模型提供两份信息 —— 用户的问题 + 一份描述工具功能的“说明书（JSON Schema）”；
+2. **大模型**：根据用户语义和说明书，计算概率并生成一段符合格式的 JSON 字符串（例如：`{"name": "query_order", "arguments": "{\"order_id\": \"9876\"}"}`）；
+3. **宿主系统（Host，即你写的后端代码）**：拦截到大模型的返回，解析该 JSON，**由你的 Python 代码在安全的本地/内网环境中真正发起网络请求或数据库查询**；
+4. **宿主系统**：拿到真实的查询结果（如 `{"status": "已发货", "express": "顺丰"}`），将其包装成一条带特殊标识（`role: tool`）的消息塞回给模型；
+5. **大模型**：结合真实数据，组织语言输出最终答复。
 
 ```mermaid
 sequenceDiagram
     autonumber
+    actor User as 用户
     participant App as 本地系统 (Host/Engine)
-    participant LLM as 远程大模型 (Remote API)
-    participant RealTool as 外部真实函数 (Local/Remote Tool)
+    participant LLM as 远端大模型 (LLM API)
+    participant Tool as 真实外部工具 (API / DB)
 
-    App->>LLM: 发送 messages + tools(JSON Schema 定义)
-    Note over LLM: 分析上下文与工具描述<br/>决定调用哪个函数及入参
-    LLM-->>App: 返回 tool_calls: {"name": "query_inventory", "arguments": "{\"sku_id\": \"A102\"}"}
-    App->>RealTool: 执行本地业务代码 query_inventory(sku_id="A102")
-    RealTool-->>App: 返回真实数据: {"stock": 42, "warehouse": "华东一号仓"}
-    App->>LLM: 追加 tool 消息: role="tool", content='{"stock": 42...}'
-    Note over LLM: 结合真实业务数据<br/>生成最终自然语言回复
-    LLM-->>App: 返回: "为您查询到该商品目前华东一号仓尚有库存42件，可正常拍下发货。"
+    User->>App: "帮我查一下订单 20260901 的发货状态"
+    App->>LLM: 发送提问 + 工具元数据定义 (tools_schema)
+    Note over LLM: 分析语义并决定调用工具<br/>预测生成 JSON 格式参数
+    LLM-->>App: 返回 tool_calls: {"name": "get_order", "arguments": "{\"id\": \"20260901\"}"}
+    App->>Tool: 本地执行真实代码 get_order(id="20260901")
+    Tool-->>App: 返回真实数据库记录 {"status": "运输中", "courier": "顺丰"}
+    App->>LLM: 追加 tool 消息: {"role": "tool", "content": "..."}
+    Note over LLM: 结合真实业务事实<br/>生成最终自然语言
+    LLM-->>App: "您的订单 20260901 目前正由顺丰速运承运中..."
+    App-->>User: 渲染最终答复
 ```
 
-### 完整原生 Python 闭环代码实现
+---
+
+## 二、 业务痛点与技术价值：为什么需要双轨制分流与微调？
+
+### 2.1 全量大模型调用的“成本与延迟刺客”
+在日均 10 万次会话的企业智能客服中：
+- 用户发送大量的“你好”、“早上好”、“人工客服呢”、“谢谢”等简单高频输入；
+- 如果每一条请求都直接唤醒 70B 参数的大模型并全量传入上万 Tokens 的工具 Schema，单次请求耗时高达 1.5~3 秒，单日 Token 消耗费用极其惊人。
+
+### 2.2 解决方案：网关层双轨制（Dual-Track Routing）
+```mermaid
+flowchart TD
+    Req[用户请求到达网关] --> Gate[网关前置: 轻量 BERT 分类器 (耗时 < 15ms)]
+    Gate --> Judge{置信度与意图分类}
+    Judge -- 高频固定意图 (如: 打招呼/人工直转) --> CacheResp[直接走本地预设模板/规则回复\n(零 Token 成本 / 15ms 极速响应)]
+    Judge -- 复杂业务/多轮意图 (如: 售后查单/政策咨询) --> AgentCore[转发至大模型 Agent 核心\n(结合 Tool Calling 与 RAG 深度推理)]
+```
+- **核心收益**：**在网关层毫秒级拦截 60% 以上的无用 Token 消耗**，将企业大模型服务器资源集中留给需要复杂推理的长尾疑难问题，整体降本达 **60% 以上**。
+
+---
+
+## 三、 应用场景与能力矩阵：Tool Calling 能做什么？
+
+| 工具类型 | 典型调用场景 | 工具入参 (Parameters) | 预期产出与业务影响 |
+| :--- | :--- | :--- | :--- |
+| **查询类工具 (Query Tools)** | 物流查单、库存检索、个人账单明细 | `order_id`, `sku_code`, `date_range` | 返回只读数据，无副作用，高并发读 |
+| **操作类工具 (Mutation Tools)** | 提交退款、修改收货地址、取消预约 | `order_id`, `reason`, `new_address` | 会修改业务数据库，需人机二次确认 |
+| **计算类工具 (Compute Tools)** | 汇率换算、税金扣减、房贷月供核算 | `principal`, `rate`, `months` | 保证 100% 数学严谨，消灭大模型算术幻觉 |
+| **外部通信工具 (Notification)** | 触发短信验证码、钉钉群通知、发邮件 | `receiver`, `template_id`, `body` | 跨系统联动与多端用户触达 |
+
+---
+
+## 四、 手把手实操指南：标准闭环代码与前置分类器
+
+### 4.1 OpenAI Function Calling 标准闭环工程实现
+
+创建 `src/03_openai_tool_calling.py`：
 
 ```python
+"""
+文件名：src/03_openai_tool_calling.py
+说明：标准 OpenAI 协议 Tool Calling 原生 5 步闭环可运行实现
+运行方式：uv run python src/03_openai_tool_calling.py
+"""
+
 import os
 import json
 from openai import OpenAI
+from dotenv import load_dotenv
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+load_dotenv()
+client = OpenAI()
 
-# 1. 定义真实业务工具函数
-def query_order_status(order_id: str) -> dict:
-    """真实业务系统查询订单接口"""
-    fake_db = {
-        "20260901": {"status": "运输中", "carrier": "顺丰速运", "eta": "2026-09-23"},
-        "20260902": {"status": "待付款", "carrier": "无", "eta": "无"}
+# 1. 本地真实业务函数
+def refund_order_api(order_id: str, reason: str) -> dict:
+    """真实 ERP 退款发起接口"""
+    print(f"\n[真实系统执行] 正在处理退款: 订单号={order_id}, 退款原因={reason}")
+    return {
+        "status": "success",
+        "order_id": order_id,
+        "refund_amount": 299.00,
+        "refund_ticket_id": "RF20260923001",
+        "notice": "退款申请已受理，预计 1-3 个工作日退回原支付账户。"
     }
-    return fake_db.get(order_id, {"error": "未查询到该订单号"})
 
-# 2. 映射工具分发字典
-AVAILABLE_TOOLS = {
-    "query_order_status": query_order_status
-}
-
-# 3. 编写符合 OpenAI 标准的工具描述规范
-tools_schema = [
+# 2. 工具元数据规约 (符合 JSON Schema 规范)
+TOOLS_CONFIG = [
     {
         "type": "function",
         "function": {
-            "name": "query_order_status",
-            "description": "根据用户的订单编号查询当前物流配送状态与预计送达时间",
+            "name": "refund_order_api",
+            "description": "当用户明确要求对指定订单发起退款时调用本接口",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "order_id": {
                         "type": "string",
-                        "description": "8位数字订单编号，如 20260901"
+                        "description": "8位数字订单流水号，例如 20260901"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "用户陈述的退款具体原因，例如：尺码不合、质量问题、误购"
                     }
                 },
-                "required": ["order_id"]
+                "required": ["order_id", "reason"]
             }
         }
     }
 ]
 
-# 4. 执行 Agent 调度闭环
-def run_agent_conversation(user_prompt: str):
+def run_tool_calling_flow(user_input: str):
+    print(f"\n--- [收到用户输入] {user_input} ---")
     messages = [
-        {"role": "system", "content": "你是一名电商智能客服。遇到需要查订单的问题，请调用工具查询后如实回答。"},
-        {"role": "user", "content": user_prompt}
+        {"role": "system", "content": "你是一家品牌官方旗舰店的售后 AI Agent。如果用户要求退款且提供了订单号与原因，请调用退款接口。"},
+        {"role": "user", "content": user_input}
     ]
 
-    # 第一轮：模型决定是否调用工具
+    # 第 1 步：大模型分析并输出工具调用指令
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=messages,
-        tools=tools_schema,
+        tools=TOOLS_CONFIG,
         tool_choice="auto"
     )
     msg = response.choices[0].message
     messages.append(msg)
 
-    # 检查是否有工具调用
+    # 第 2 步：判断是否产生 tool_calls
     if msg.tool_calls:
         for tool_call in msg.tool_calls:
-            fn_name = tool_call.function.name
-            fn_args = json.loads(tool_call.function.arguments)
-            
-            print(f"[Agent 触发工具] 正在调用: {fn_name}, 参数: {fn_args}")
-            # 执行真实本地代码
-            fn = AVAILABLE_TOOLS[fn_name]
-            result = fn(**fn_args)
-            
-            # 将执行结果作为 tool 消息回传
+            func_name = tool_call.function.name
+            func_args = json.loads(tool_call.function.arguments)
+            print(f"👉 模型识别需要调用: {func_name}，解析出参数: {func_args}")
+
+            # 第 3 步：本地调度执行真实函数
+            if func_name == "refund_order_api":
+                result = refund_order_api(**func_args)
+            else:
+                result = {"error": "未定义工具"}
+
+            # 第 4 步：回传 tool 观察结果
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,
-                "name": fn_name,
+                "name": func_name,
                 "content": json.dumps(result, ensure_ascii=False)
             })
-        
-        # 第二轮：模型结合真实工具返回生成最终答复
-        final_response = client.chat.completions.create(
+
+        # 第 5 步：模型基于真实业务数据生成最终礼貌回复
+        final_resp = client.chat.completions.create(
             model="gpt-4o",
             messages=messages
         )
-        return final_response.choices[0].message.content
+        return final_resp.choices[0].message.content
     else:
         return msg.content
 
-# 运行测试
 if __name__ == "__main__":
-    print(run_agent_conversation("你好，帮我看下订单 20260901 到哪了？"))
+    if not os.getenv("OPENAI_API_KEY"):
+        print("💡 演示说明：配置 OPENAI_API_KEY 后即可运行真实的 GPT-4o 5步工具调用闭环！")
+    else:
+        print(run_tool_calling_flow("你好，我的订单 20260901 衣服买大了一号，帮我申请全额退款。"))
 ```
 
 ---
 
-## 4.4 Anthropic MCP（Model Context Protocol）协议
+### 4.2 网关层轻量 BERT 意图分类器实现（PyTorch）
 
-**MCP** 是由 Anthropic 发起并迅速被行业接受的开源标准化协议。它彻底解决了“每个工具都要写一套定制 API 适配层”的行业难题。
-
-```mermaid
-flowchart LR
-    subgraph Host[Host: 智能体宿主应用]
-        AgentCore[Agent 调度引擎 / Cursor / Claude Desktop]
-    end
-
-    subgraph MCPServer[MCP Server: 标准化工具与数据源]
-        PG[PostgreSQL MCP]
-        GH[GitHub MCP]
-        FS[本地文件系统 MCP]
-    end
-
-    AgentCore <-->|标准 JSON-RPC 2.0 协议\n(基于 stdio 或 SSE 传输)| PG
-    AgentCore <-->|标准 JSON-RPC 2.0 协议| GH
-    AgentCore <-->|标准 JSON-RPC 2.0 协议| FS
-```
-
-- **三大核心能力**：
-  - **Tools（工具）**：执行外部操作（如运行 SQL、发送邮件、写文件）。
-  - **Resources（资源）**：提供只读数据流（如日志输出、实时指标监控）。
-  - **Prompts（提示词模板）**：预设的专业领域问答模板。
-
----
-
-## 4.5 模型工具能力微调与传统分类模型融合
-
-### 1. 开源模型工具调用微调（基于 XTuner / LLaMA-Factory）
-在许多生产专网或数据合规场景下，企业无法直接调用公网商用 API，需要使用私有部署的模型（如 Qwen2.5-7B、InternLM2.5）。为确保这些模型在复杂业务下稳定输出合规的 Tool JSON，通常需要进行微调。
-
-#### 训练数据集标准结构（ShareGPT / OpenAI Function 格式）：
-```json
-[
-  {
-    "messages": [
-      {
-        "role": "system",
-        "content": "You are a helpful assistant with access to the following tools.",
-        "tools": [
-          {
-            "type": "function",
-            "function": {
-              "name": "get_stock_price",
-              "description": "获取指定股票代码的实时行情",
-              "parameters": {
-                "type": "object",
-                "properties": {
-                  "ticker": {"type": "string", "description": "股票代码，例如 AAPL"}
-                },
-                "required": ["ticker"]
-              }
-            }
-          }
-        ]
-      },
-      {
-        "role": "user",
-        "content": "苹果公司现在的股价是多少？"
-      },
-      {
-        "role": "assistant",
-        "content": "",
-        "tool_calls": [
-          {
-            "id": "call_12345",
-            "type": "function",
-            "function": {
-              "name": "get_stock_price",
-              "arguments": "{\"ticker\": \"AAPL\"}"
-            }
-          }
-        ]
-      }
-    ]
-  }
-]
-```
-
----
-
-### 2. 传统意图分类器融合（对应 6.jpeg 工业落地实录）
-在高并发场景（如日均 10 万次会话的客服系统）中，**如果每一次用户打招呼或发表情都请求 70B 大模型，服务器成本将极其高昂，且延迟难以接受**。
-
-工业界成熟做法：在 Agent 系统的网关层，前置轻量级的小模型（如 BERT + BiLSTM + CRF 分类器），完成第一道毫秒级分流与槽位提取。
+创建 `src/04_bert_intent_classifier.py`：
 
 ```python
+"""
+文件名：src/04_bert_intent_classifier.py
+说明：基于 PyTorch + HuggingFace Transformers 实现网关层毫秒级前置意图分类器
+运行方式：uv run python src/04_bert_intent_classifier.py
+"""
+
 import torch
 import torch.nn as nn
 from transformers import BertModel, BertTokenizer
 
-class IntentClassifier(nn.Module):
+class GatewayBertClassifier(nn.Module):
     """
-    基于 BERT 的工业级轻量意图分类器
-    用于网关层毫秒级前置意图分流 (咨询 / 查单 / 退款 / 闲聊)
+    轻量前置意图分类器：
+    分类标签：0: 闲聊寒暄, 1: 售后退换, 2: 查单物流, 3: 投诉转人工
+    推理耗时：GPU 模式下约 8~15ms，极大缓解后端大模型并发压力
     """
-    def __init__(self, bert_model_name: str, num_intents: int, dropout_rate: float = 0.1):
-        super(IntentClassifier, self).__init__()
-        self.bert = BertModel.from_pretrained(bert_model_name)
-        self.dropout = nn.Dropout(dropout_rate)
-        # 将 [CLS] 标记的 768 维向量映射到具体的业务分类类别数
-        self.classifier = nn.Linear(self.bert.config.hidden_size, num_intents)
+    def __init__(self, pretrained_model_name: str = "bert-base-chinese", num_classes: int = 4):
+        super().__init__()
+        self.bert = BertModel.from_pretrained(pretrained_model_name)
+        self.dropout = nn.Dropout(0.2)
+        # 将 BERT 输出的 768 维语义向量映射为业务分类类别数
+        self.classifier = nn.Linear(self.bert.config.hidden_size, num_classes)
 
-    def forward(self, input_ids, attention_mask):
+    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
-        # 获取首个特殊字符 [CLS] 的池化表征
-        cls_output = outputs.pooler_output
-        cls_output = self.dropout(cls_output)
-        logits = self.classifier(cls_output)
+        # 提取句子维度的 [CLS] 池化特征
+        pooled_output = outputs.pooler_output
+        logits = self.classifier(self.dropout(pooled_output))
         return logits
+
+def predict_single_intent(text: str, model: nn.Module, tokenizer: BertTokenizer, device: str = "cpu") -> dict:
+    model.eval()
+    inputs = tokenizer(
+        text,
+        max_length=64,
+        padding="max_length",
+        truncation=True,
+        return_tensors="pt"
+    ).to(device)
+
+    with torch.no_grad():
+        logits = model(input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"])
+        probs = torch.softmax(logits, dim=-1).squeeze().tolist()
+        predicted_idx = int(torch.argmax(logits, dim=-1).item())
+
+    intent_map = {0: "闲聊寒暄", 1: "售后退换", 2: "查单物流", 3: "投诉转人工"}
+    return {
+        "text": text,
+        "predicted_intent": intent_map[predicted_idx],
+        "confidence": round(probs[predicted_idx], 4),
+        "all_probs": {intent_map[i]: round(probs[i], 4) for i in range(len(probs))}
+    }
+
+if __name__ == "__main__":
+    print("💡 网关前置分类器模块定义完毕。在生产集群中，该模型常部署于 Triton Inference Server 或 TorchServe 提供高吞吐支撑。")
 ```
 
-- **实战收益**：
-  - 将 60% 以上的高频固定意图在 **10~20ms** 内直接拦截分流，大幅节省 GPU 推理成本；
-  - 遇到低置信度、长文本或歧义表达时，无缝降级转发给大模型 Agent 进行深层推理。
+---
+
+## 五、 生产避坑与常见误区（Troubleshooting FAQ）
+
+### Q1：大模型在返回参数时，经常遗漏必填字段（如漏掉了 `order_id`）导致后端报 KeyError 怎么办？
+- **解决方案**：
+  1. 在工具参数中声明 `"required": ["order_id"]`，并在字段 `description` 中写明示例：“8位数字，如 20260901”；
+  2. 后端采用 `Pydantic` 承收入参。若校验失败，**不要抛出系统 500**，而是回传一条友好提示给模型：“缺失必要参数 order_id，请追问用户”，由模型礼貌地向用户追问该参数。
+
+### Q2：使用开源模型（如 Qwen2.5-7B 或 Llama-3）时，模型直接把 JSON 格式打印在回答里，而不走 Tool Calling 协议通道怎么办？
+- **原因剖析**：开源模型未经过针对特定工具格式的 SFT（监督微调），或者 Prompt 模板中的特殊标记（如 `<|im_start|>assistant`）格式错位。
+- **解决方案**：使用 **XTuner** 或 **LLaMA-Factory**，基于包含 `tools` 字段的 ShareGPT 格式多轮会话数据集进行 1~2 个 Epoch 的 LoRA 微调。
+
+---
+
+## 六、 本章课后实战作业（Lab Challenge）
+
+1. **动手实践**：运行 `03_openai_tool_calling.py`，观察模型在接收到“查询”和“退款”不同指令时，是如何自动切换选择不同函数的。
+2. **安全防御改造**：为退款接口增加安全风控校验（如：单笔退款金额大于 500 元时，返回状态 `{"status": "pending_approval", "msg": "超过自动退款阈值，已提交流水并转人工审核"}`），观察 Agent 如何向用户汇报这一策略。

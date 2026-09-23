@@ -1,239 +1,256 @@
-# 第二章：路线图篇 —— Agent 开发与就业 14 步全景进阶路线
+# 第 2 章：Agent 工程师成长全景图 —— 14 步逐级进阶指南
 
-> **导读**：本章将 `0.png` 中呈现的“Agent 开发就业路线 14 步”逐一拆解为具体的学习目标、技术栈工具链、实操步骤以及考核指标。无论你是零基础转码、传统后端转型，还是算法工程师探索工程落地，都可以按照此路线图稳步推进。
+> **本章核心目标**：建立清晰完整的全栈 Agent 工程师技术知识图谱，彻底告别零散的碎片化学习；掌握现代 Python 工程化环境配置标准（基于 Astral `uv` 极速包管理）；手把手完成第一个具备生产级 Server-Sent Events（SSE）打字机流式输出能力的 Agent 后端接口。
 
 ---
 
-## 2.1 路线图全景总览
+## 一、 核心概念剖析：什么是全栈 Agent 工程师技能树？
+
+在生成式 AI 时代，技术岗位正在发生深刻重塑：
+- **纯提示词工程（Prompt Engineering）** 门槛极低，极易被自动化模型取代；
+- **纯底层大模型预训练（Pre-training）** 集中在少数算力寡头手中，企业普通岗位稀缺；
+- **全栈 Agent 工程师（AI Agent Full-Stack Engineer）** 成为目前产业界最为稀缺、薪资杠杆最高的核心岗位。他们向上理解业务场景与多模态交互，向下连接数据库、ERP 与外部 API，中间掌控有向状态图编排、容错熔断、混合检索与轻量模型微调。
 
 ```mermaid
 flowchart TD
-    subgraph 阶段一[阶段一: 编程与服务基础]
-        S01["第一步: Python 核心与虚拟环境"] --> S02["第二步: FastAPI 服务化与流式交互"]
+    subgraph S1[阶段一: 编程基础与服务化]
+        Step1[第1步: Python 核心与面向对象] --> Step2[第2步: FastAPI 服务化与 SSE 流式接口]
     end
 
-    subgraph 阶段二[阶段二: 大模型与提示工程]
-        S02 --> S03["第三步: Transformer 原理与 LLM API"]
-        S03 --> S04["第四步: Prompt 结构化输出与 Cache"]
+    subgraph S2[阶段二: 模型底座与提示工程]
+        Step2 --> Step3[第3步: Transformer 原理、Token 机制与 API 封装]
+        Step3 --> Step4[第4步: Prompt 结构化输出与 Prompt Cache 降本]
     end
 
-    subgraph 阶段三[阶段三: 知识增强与外部能力]
-        S04 --> S05["第五步: RAG 向量检索与重排序"]
-        S05 --> S06["第六步: Tool Calling 与 MCP Server"]
+    subgraph S3[阶段三: 知识增强与工具连接]
+        Step4 --> Step5[第5步: 工业级 RAG 混合检索与 BGE 重排序]
+        Step5 --> Step6[第6步: Tool Calling、Function Calling 与 MCP 协议]
     end
 
-    subgraph 阶段四[阶段四: 框架编排与多智能体]
-        S06 --> S07["第七步: LangChain 与 LangGraph 状态图"]
-        S07 --> S08["第八步: Agent Workflow 实战与熔断"]
+    subgraph S4[阶段四: 状态编排与多智能体]
+        Step6 --> Step7[第7步: LangChain 与 LangGraph 有向状态图]
+        Step7 --> Step8[第8步: Agent Workflow 多工具协同与熔断设计]
+        Step8 --> Step9[第9步: AI Coding 辅助联调与边界测试补齐]
+        Step9 --> Step10[第10步: Skills 技能模块封装与渐进式加载]
     end
 
-    subgraph 阶段五[阶段五: AI Coding 与技能演进]
-        S08 --> S09["第九步: AI 辅助编程联调与 Review"]
-        S09 --> S10["第十步: Skills 技能模块封装与复用"]
-    end
-
-    subgraph 阶段六[阶段六: 前沿架构与评测体系]
-        S10 --> S11["第十一步: Harness / Hermes / OpenClaw 开源精讲"]
-    end
-
-    subgraph 阶段七[阶段七: 商业实战与求职通关]
-        S11 --> S12["第十二步: 企业级项目实战与算法八股"]
-        S12 --> S13["第十三步: 简历包装与技术深度模拟面"]
-        S13 --> S14["第十四步: 面试复盘与 Offer 决策入职"]
+    subgraph S5[阶段五: 前沿架构与商业交付]
+        Step10 --> Step11[第11步: Agent Harness 评测、Hermes 与开源前沿]
+        Step11 --> Step12[第12步: 企业级商用项目实战与算法八股梳理]
+        Step12 --> Step13[第13步: STAR 法则高分简历包装与模拟深度技术面]
+        Step13 --> Step14[第14步: 面试复盘、Offer 决策与企业级交付入职]
     end
 ```
 
 ---
 
-## 2.2 14 步逐级拆解与落地指南
+## 二、 业务痛点与技术价值：为什么需要这 14 步路线？
 
-### 第一步：Python 核心语法与现代工程环境
-- **核心知识**：
-  - Python 基础语法、函数式特性（lambda、闭包、装饰器）。
-  - 面向对象编程（OOP）：类继承、抽象类、魔术方法。
-  - 文件 IO 与异步编程：`async` / `await`、`asyncio` 协程、HTTP 异步客户端（`httpx`）。
-  - 类型提示与数据模型校验：`typing` 模块与 `Pydantic v2`。
-- **环境管理实操**：
-  - 使用 `uv` 或 `poetry` 管理依赖，彻底告别全局环境混乱。
-  ```bash
-  # 推荐使用现代高速包管理器 uv 初始化项目
-  curl -LsSf https://astral.sh/uv/install.sh | sh
-  uv init agent-demo
-  cd agent-demo
-  uv add httpx pydantic fastapi uvicorn
+### 2.1 碎片化学习的致命陷阱
+许多开发者在学习 Agent 时往往直接复制一段 LangChain 快速教程，能跑通一个简单的问答就以为掌握了 Agent。然而一旦进入真实的商业交付，立刻遭遇断崖式挫折：
+- **无法满足生产交互**：前端需要打字机流式回显，但接口只支持全量阻塞等待；
+- **成本与延迟失控**：多轮会话没有做 Prompt Cache 和滑动窗口压缩，用户聊 10 轮账单翻数倍；
+- **线上不可控崩溃**：外部工具调用返回 500 时，整个智能体陷入死循环重试直接打崩服务器。
+
+这 14 步全景体系正是为了**补齐生产工程闭环中的每一个脆弱节点**，让每一位学习者具备承接企业商业级项目的底气。
+
+---
+
+## 三、 应用场景与能力矩阵：14 步逐级拆解与验收标准
+
+| 阶段分类 | 进阶步骤 | 核心技术点与工具链 | 达标自测验收标准 |
+| :--- | :--- | :--- | :--- |
+| **阶段一<br>编程与服务** | **第 1 步：Python 核心** | 类型提示 `typing`、面向对象、异步协程 `asyncio`、`Pydantic v2` 数据校验 | 能熟练手写带字段约束与自定义校验器的 DTO 模型 |
+| | **第 2 步：FastAPI 服务化** | RESTful 路由、CORS 跨域、SSE（Server-Sent Events）打字机流式传输 | 能在终端通过 `curl -N` 实时接收到流式思考与答案分块 |
+| **阶段二<br>底座与提示** | **第 3 步：Transformer 机制** | Tokenization 分词（BPE）、KV Cache 原理、Context Window、API 超参数（Temperature） | 能精准计算请求 Token 成本并分析不同 Temperature 行为 |
+| | **第 4 步：Prompt Cache** | JSON Mode 强约束输出、System Prompt 前缀固定、Prompt Cache 命中优化 | 首字延迟降低 60% 以上，大模型输出 100% 为可解析 JSON |
+| **阶段三<br>知识与工具** | **第 5 步：工业级 RAG** | 文档分块（Chunking）、Embedding 向量化、BM25 + 向量混合检索、BGE-Reranker | 面对含专有型号代码的生僻条款，Top-3 召回率达到 90%+ |
+| | **第 6 步：Tool Calling** | OpenAI Function Calling 规范、本地工具注册分发闭环、Anthropic MCP 协议 | 能够让模型调用本地 Python 函数查天气/订单并整合回复 |
+| **阶段四<br>框架与编排** | **第 7 步：LangGraph 状态图** | `StateGraph`、`Node`、`Edge`、条件路由（Conditional Edge）、循环迭代 | 能够用状态图构建带条件判断与工具回环调用的复杂工作流 |
+| | **第 8 步：Workflow 健壮性** | Router 模式、并发工具调用、最大轮次限制与防死循环熔断器 | 外部 API 发生异常时系统能优雅降级而不是直接抛异常崩溃 |
+| | **第 9 步：AI Coding 进阶** | Cursor / Claude Code 联动、自动化生成 Pytest 测试用例、模糊攻击测试 | 核心业务路由与参数解析代码单元测试覆盖率达 80%+ |
+| | **第 10 步：Skills 封装** | 技能元数据规约、能力渐进式披露加载（Progressive Disclosure） | 实现技能动态加载，避免不相关工具污染上下文与增加开销 |
+| **阶段五<br>交付与通关** | **第 11 步：开源前沿架构** | Agent Harness 沙箱隔离、SWE-bench 评测体系、AutoGPT/SuperAGI 架构 | 能深入研读前沿自主 Agent 开源仓库的 Event Loop 源码 |
+| | **第 12 步：企业级商用实战** | 智能客服系统交付、Dify 电商助手、医疗智能问诊系统端到端实操 | 能够独立画出千万级高可用 Agent 架构图并阐述技术权衡 |
+| | **第 13 步：简历与模拟面试** | STAR 法则技术包装、业务难点与量化收益表述、多轮模拟面试演练 | 形成一份拥有 2 个以上商业级壁垒项目的顶尖高分简历 |
+| | **第 14 步：复盘与 Offer 决策** | Bad Case 追踪表复盘、系统设计题查缺补漏、职级薪资评估 | 掌握不同团队业务真实性与算力支持度的甄别方法 |
+
+---
+
+## 四、 手把手实操指南：环境搭建与流式接口开发
+
+### 4.1 现代 Python 工程环境从零搭建（基于 Astral `uv`）
+
+在生产级开发中，严禁在全局 Python 环境下滥用 `pip install`。推荐使用目前业内速度最快的包管理神器 **`uv`**（比传统 pip/poetry 快 10~100 倍）：
+
+```bash
+# 1. 终端一行命令安装 uv (支持 macOS/Linux)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. 检查安装版本
+uv --version
+
+# 3. 初始化项目并自动创建虚拟环境
+uv init ai-agent-core
+cd ai-agent-core
+
+# 4. 一键安装全栈开发核心依赖
+uv add fastapi "uvicorn[standard]" pydantic httpx openai python-dotenv
+```
+
+---
+
+### 4.2 生产级 FastAPI SSE 流式打字机服务实现
+
+用户使用 Agent 时，单次思考和调用工具往往需要 2~5 秒。如果采用传统阻塞响应，用户只能对着白屏等待，体验极差。**必须使用 Server-Sent Events（SSE）提供打字机流式回显**。
+
+在项目根目录下创建 `src/01_fastapi_sse_stream.py` 文件：
+
+```python
+"""
+文件名：src/01_fastapi_sse_stream.py
+说明：生产级 FastAPI + SSE (Server-Sent Events) 打字机流式服务标准实现
+运行方式：uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
+"""
+
+from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+import asyncio
+import json
+from datetime import datetime
+
+app = FastAPI(
+    title="AI Agent Production Streaming Service",
+    description="支持思考轨迹追踪与实时自然语言打字机的标准接口",
+    version="1.0.0"
+)
+
+# 生产环境跨域安全配置
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 生产环境请指定具体的前端域名
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+async def agent_execution_generator(user_query: str):
+    """
+    模拟 Agent 完整的思考、工具调用与答案生成全链路事件流
+    """
+    # 阶段 1：接收并解析意图
+    stage_1 = {
+        "event_id": 1,
+        "type": "thought",
+        "stage": "intent_parsing",
+        "timestamp": datetime.now().isoformat(),
+        "message": f"正在深度分析用户需求：'{user_query}'，识别到包含查单与政策咨询双重意图..."
+    }
+    yield f"data: {json.dumps(stage_1, ensure_ascii=False)}\n\n"
+    await asyncio.sleep(0.6)
+
+    # 阶段 2：规划并调用工具
+    stage_2 = {
+        "event_id": 2,
+        "type": "tool_call",
+        "stage": "action_execution",
+        "tool_name": "query_order_status",
+        "arguments": {"order_id": "20260901"},
+        "message": "正在请求内部 ERP 接口查询订单 [20260901] 的最新物流动态..."
+    }
+    yield f"data: {json.dumps(stage_2, ensure_ascii=False)}\n\n"
+    await asyncio.sleep(0.8)
+
+    # 阶段 3：观察外部返回
+    stage_3 = {
+        "event_id": 3,
+        "type": "observation",
+        "stage": "data_received",
+        "result": {"status": "运输中", "hub": "华东中心转运站", "courier": "顺丰特快"},
+        "message": "接口返回成功：包裹正处于顺丰特快陆运中，预计今日 18:00 送达。"
+    }
+    yield f"data: {json.dumps(stage_3, ensure_ascii=False)}\n\n"
+    await asyncio.sleep(0.5)
+
+    # 阶段 4：自然语言打字机流式输出最终答复
+    final_answer = (
+        "您好！为您查询到订单号 20260901 的最新进展如下：\n\n"
+        "1. 物流承运：顺丰特快\n"
+        "2. 当前位置：已到达【华东中心转运站】，正在进行分拣派发\n"
+        "3. 预计送达：今天下午 18:00 前完成送货上门\n\n"
+        "请您保持手机畅通，如有其他疑问可随时告诉我！"
+    )
+    
+    # 逐字拆包打字机推送
+    for char in final_answer:
+        chunk = {
+            "type": "answer_chunk",
+            "content": char
+        }
+        yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+        await asyncio.sleep(0.03)  # 模拟自然的打字手感
+
+    # 结束标志
+    yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+@app.get("/api/v1/agent/chat")
+async def chat_stream_endpoint(query: str = Query(..., description="用户的提问内容")):
+    """
+    对外暴露的标准 SSE 流式通信端点
+    """
+    return StreamingResponse(
+        agent_execution_generator(query),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # 关键：通知 Nginx/网关不要对流式内容进行缓冲
+        }
+    )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("src.01_fastapi_sse_stream:app", host="127.0.0.1", port=8000, reload=True)
+```
+
+---
+
+### 4.3 验证运行步骤与测试命令
+
+打开终端执行以下命令启动服务：
+
+```bash
+# 启动 FastAPI 开发服务器
+uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
+```
+
+打开另一个终端窗口，使用带有 `-N`（禁用缓冲）参数的 `curl` 进行测试：
+
+```bash
+curl -N "http://127.0.0.1:8000/api/v1/agent/chat?query=我的订单20260901到哪了"
+```
+
+你将在终端中亲眼看到流式数据按照 `data: {"type": ...}` 的格式连续推送，前端界面使用原生的 `const es = new EventSource(...)` 即可无缝渲染动态打字机效果。
+
+---
+
+## 五、 生产避坑与常见误区（Troubleshooting FAQ）
+
+### Q1：为什么本地测试打字机效果正常，部署到线上（经过 Nginx 或 Cloudflare）后却变成了等全量回答生成完才一下子全部吐出来？
+- **原因剖析**：Nginx 等反向代理服务器默认开启了 `proxy_buffering on`，网关会把后端返回的数据在内存里攒够一定大小（如 4KB）才下发给前端。
+- **解决方案**：在 FastAPI 的响应头中必须注入：`"X-Accel-Buffering": "no"`；同时在 Nginx 配置中增加：
+  ```nginx
+  proxy_buffering off;
+  proxy_cache off;
   ```
-- **达标检验**：能够熟练使用 `Pydantic` 编写带有字段校验、默认值和自定义验证器的数据传输对象（DTO）。
+
+### Q2：`uv` 虚拟环境与 IDE（如 Cursor / VS Code）解析器不一致怎么办？
+- **解决方案**：在 IDE 的命令面板（`Cmd + Shift + P`）中输入 `Python: Select Interpreter`，选择当前工程目录下的 `.venv/bin/python` 即可完成完美智能提示。
 
 ---
 
-### 第二步：FastAPI 服务化、流式输出与模型接入
-- **核心知识**：
-  - RESTful API 架构设计、路由分发与中间件。
-  - **Server-Sent Events (SSE) 流式传输**：Agent 思考和输出过程中的流式打字机效果。
-  - CORS 跨域配置与后端错误兜底拦截。
-- **实操范例（极简 SSE 流式 Agent 接口）**：
-  ```python
-  from fastapi import FastAPI
-  from fastapi.responses import StreamingResponse
-  import asyncio
-  import json
+## 六、 本章课后实战作业（Lab Challenge）
 
-  app = FastAPI(title="Agent Service")
-
-  async def event_generator():
-      thought_steps = ["正在分析用户意图...", "已定位查询工具...", "正在执行数据检索...", "生成最终回答中..."]
-      for step in thought_steps:
-          data = json.dumps({"type": "thought", "content": step}, ensure_ascii=False)
-          yield f"data: {data}\n\n"
-          await asyncio.sleep(0.6)
-      yield f"data: {json.dumps({'type': 'answer', 'content': '为您查询到的结果如下：...'})}\n\n"
-
-  @app.get("/api/chat/stream")
-  async def chat_stream():
-      return StreamingResponse(event_generator(), media_type="text/event-stream")
-  ```
-- **达标检验**：能使用 `uvicorn main:app --reload` 启动服务，并在浏览器或前端通过 `EventSource` 成功接收流式输出。
-
----
-
-### 第三步：Transformer 原理、Token 计量与大模型 API
-- **核心知识**：
-  - Transformer 核心结构（Self-Attention、Encoder/Decoder 区别、KV Cache 原理）。
-  - Tokenization 分词机制：BPE（Byte-Pair Encoding）、Tiktoken、中文与英文 Token 消耗差异。
-  - 模型生成超参数：`temperature`（控制多样性/创造力）、`top_p`（核采样）、`max_tokens`、`stop_sequences`。
-- **统一客户端封装**：
-  - 使用官方 SDK 或兼容库（如 `openai` Python SDK）连接各类模型（DeepSeek、GPT-4o、Claude、Qwen）。
-- **达标检验**：理解为什么 Temperature 设置为 0 时结果最确定，并能准确计算一段请求中的 Prompt Tokens 与 Completion Tokens 成本。
-
----
-
-### 第四步：Prompt 工程、结构化输出与 Prompt Cache
-- **核心知识**：
-  - CoT（Chain of Thought）思维链促使模型输出推理步骤。
-  - **结构化输出（JSON Mode / Pydantic Output Parser）**：杜绝模型输出“Markdown包裹的废话”，直接得到可解析字典。
-  - **Prompt Cache（提示词缓存）**：
-    - Anthropic Claude 与 DeepSeek 均支持的前缀缓存技术。
-    - 将不变的超长系统提示词、工具列表、背景文档放在前部，后续对话命中缓存可降低 **50%~90% 的成本** 并显著降低首字延迟（TTFT）。
-- **达标检验**：编写一段包含严密 System 提示词的代码，无论用户如何提问，输出格式恒为合法 JSON 且无 Markdown 反引号包裹。
-
----
-
-### 第五步：RAG 知识检索增强、向量模型与重排序
-- **核心知识**：
-  - 文档加载与清洗（PDF、Word、Markdown 解析）。
-  - 分块切分（Chunking）：字符切分、语义切分、父子文档切分（Parent-Document Retrieval）。
-  - Embedding 向量模型与相似度度量（Cosine 距离、Dot Product）。
-  - 向量数据库实践（Chroma、Qdrant、Milvus）。
-  - **工业级混合检索（Hybrid Search）+ Rerank（重排序）**：
-    - BM25 解决专业名词、订单号、编号的精准命中；
-    - Dense Vector 解决语义泛化问题；
-    - BGE-Reranker / Cohere Rerank 对 Top-K 结果进行交叉注意力重新打分。
-- **达标检验**：能够搭建一个本地企业知识库问答 Demo，面对“包含专业编号的生僻条款”，检索召回率在 Top-3 内达到 90% 以上。
-
----
-
-### 第六步：Tool Calling、Function Calling 与 MCP Server 架构
-- **核心知识**：
-  - OpenAI Function Calling 规范与底层运行原理（模型只生成 JSON，本地执行代码）。
-  - 工具定义 Schema：`name`, `description`, `parameters` 的精确编写技巧（模型靠 description 决定选谁）。
-  - **Anthropic MCP（Model Context Protocol）协议**：
-    - 统一的跨平台上下文与工具协议；
-    - Client-Server 架构，标准 stdio 与 SSE 传输模式；
-    - 快速将数据库、Git 仓库、文件系统暴露为标准化 MCP Server。
-- **达标检验**：能够为一个大模型挂载自定义工具（如查数据库、调用天气 API、运行一段计算），并完整走完 `模型输出调用意图 -> 本地执行 -> 回传执行结果 -> 模型整合输出` 的闭环。
-
----
-
-### 第七步：LangChain 与 LangGraph 节点状态图
-- **核心知识**：
-  - LangChain 核心抽象（PromptTemplate、ChatModel、OutputParser、Runnables/LCEL）。
-  - **LangGraph 核心架构**：
-    - 解决传统 LangChain 线性链无法处理循环、条件分支和多 Agent 协同的痛点；
-    - 核心概念：`State`（全图共享状态字典）、`Node`（处理状态的函数）、`Edge`（连接节点的边）、`Conditional Edge`（根据当前状态动态分支）。
-- **实操范例（基础图结构）**：
-  ```python
-  from typing import TypedDict, Annotated
-  from langgraph.graph import StateGraph, END
-
-  class AgentState(TypedDict):
-      query: str
-      plan: str
-      tool_result: str
-      response: str
-
-  workflow = StateGraph(AgentState)
-  # 添加节点与连接
-  # workflow.add_node("planner", plan_step)
-  # workflow.add_node("executor", tool_step)
-  # workflow.set_entry_point("planner")
-  # workflow.add_edge("planner", "executor")
-  # workflow.add_edge("executor", END)
-  # app = workflow.compile()
-  ```
-- **达标检验**：能用 LangGraph 构建一个包含“条件判断（无需工具则直接回复，需要工具则路由到工具节点并回环）”的有向状态图。
-
----
-
-### 第八步：Agent Workflow 实战、多工具协同与熔断保护
-- **核心知识**：
-  - 路由网关设计（Router Pattern）：多类型请求快速分流。
-  - 并行工具调用（Parallel Tool Calling）：一次性并发查询多地天气或多个数据库。
-  - **工业级健壮性设计（容灾与熔断）**：
-    - 最大迭代轮次保护（`max_iterations`）：严防死循环。
-    - 工具异常重试与降级返回（Fallback）。
-    - 敏感操作的人机协作（Human-in-the-Loop）：转账、删除数据前挂起等待人工 Approve。
-- **达标检验**：在线上环境发生外部工具 500 报错时，Agent 能优雅捕获异常并向用户解释，而不是抛出未捕获的系统崩溃堆栈。
-
----
-
-### 第九步：AI Coding 辅助开发、联调与边界校验
-- **核心知识**：
-  - 善用现代化 AI 编程助手（Cursor、GitHub Copilot、Claude Code）。
-  - 基于自然语言生成高覆盖率单元测试（`pytest`、`unittest.mock`）。
-  - 使用 AI 对复杂 Agent Prompt 进行鲁棒性模糊测试（Fuzz Testing）：输入脏数据、恶意注入提示词（Prompt Injection）。
-- **达标检验**：为自己开发的 Agent 核心路由模块编写自动化测试用例，核心分支覆盖率达到 80% 以上。
-
----
-
-### 第十步：Skills 进化 —— 技能封装与能力复用
-- **核心知识**：
-  - 将高频业务动作抽象为“技能包（Skills）”：内聚代码、提示词、参考资源与执行脚本。
-  - 技能的渐进式加载（Progressive Disclosure）：只在需要时检索并向模型上下文注入相关技能定义，避免 Context Window 被大量无用文档塞满。
-  - 跨 Agent 技能共享与标准化定义。
-- **达标检验**：实现一个技能管理器，当 Agent 接收到数据分析任务时，按需动态加载数据分析技能规范，执行完毕后自动卸载。
-
----
-
-### 第十一步：开源自主智能体前沿架构与评测体系
-- **核心知识**：
-  - 核心评测基准：AgentBench、SWE-bench、GAIA。
-  - **Agent Harness 架构**：评测框架如何隔离环境（Docker 沙箱）、记录轨迹日志（Trajectory Trace）并评定完成率。
-  - 经典与前沿开源项目架构解构：
-    - Hermes / OpenManus / OpenClaw：通用自主执行环境与浏览器/命令行操作交互设计。
-    - PI Agent：垂直场景的自主规划智能体。
-- **达标检验**：能看懂开源自主 Agent 的事件循环（Event Loop）源码，指出其任务分解、状态暂存与报错回溯机制。
-
----
-
-### 第十二步：企业级项目实战辅导与算法八股梳理
-- **实战辅导**：完成 1~2 个生产可落地的商业化项目（如企业多渠道智能客服系统、医疗多模态问诊系统、金融深度研报 Agent）。
-- **算法与高频八股梳理**：
-  - RAG 检索退化怎么办？幻觉产生的本质原因与工业缓解手段有哪些？
-  - 为什么不能完全用大模型代替传统分类模型？
-  - 如何平衡 Agent 的执行准确率与多轮对话的响应延迟？
-- **达标检验**：对常见系统设计问题能画出完整架构图，并讲清楚技术选型的权衡（Trade-offs）。
-
----
-
-### 第十三步：简历指导与多轮模拟技术面试
-- **简历打造原则**：
-  - 拒绝堆砌“熟练掌握 LangChain”，突出“基于 LangGraph 状态图重构业务流，将多轮任务完成率从 55% 提升至 88%，首字延迟降低 40%”。
-  - 采用 **STAR 法则**（Situation 业务背景、Task 核心挑战、Action 架构与算法方案、Result 量化业务收益）。
-- **模拟技术面**：经历项目深挖面（追问细节与异常流）、系统设计面（海量并发下 Agent 调度架构）与综合面。
-
----
-
-### 第十四步：面试复盘、Offer 选择与企业入职准备
-- **面试复盘**：建立 Bad Case 记录表，对面试中卡壳的原理题、设计题进行查缺补漏。
-- **Offer 评估维度**：业务场景真实性（是否真有高频业务数据落地）、算力与 API 资源支持度、团队技术栈技术深度。
-- **入职准备**：熟悉企业私有化部署工具链、内部安全合规规范与业务领域数据特征。
+1. **动手实践**：在本地成功运行 `01_fastapi_sse_stream.py`，并使用终端 `curl -N` 成功接收到完整的打字机输出流。
+2. **拓展改造**：在 `agent_execution_generator` 中增加一个异常状态类型 `{"type": "error", "code": 500, "message": "ERP 接口超时"}`，并编写一段模拟异常发生时的优雅降级响应逻辑。
