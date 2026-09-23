@@ -1,0 +1,14 @@
+{
+  "name": "ai-agent-tutorial",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "AI Agent 全栈开发与商业落地教程文档站点",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  }
+}

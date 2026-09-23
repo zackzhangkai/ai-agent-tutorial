@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI Agent 全栈开发与商业落地工程实操手册</title>
+<style>
+  @page {
+    size: A4;
+    margin: 22mm 18mm 22mm 18mm;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+    color: #1E293B;
+    background: #FFFFFF;
+    line-height: 1.68;
+    font-size: 13.5px;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Page Break Utilities */
+  .page-break {
+    page-break-before: always;
+  }
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+
+  /* Cover Page */
+  .cover {
+    height: 860px; padding: 36px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 50px 30px;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #0F172A 0%, #1E293B 60%, #0F172A 100%);
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: "";
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%);
+  }
+  .cover-badge {
+    display: inline-block;
+    background: rgba(56, 189, 248, 0.2);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #38BDF8;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    align-self: flex-start;
+  }
+  .cover-title-group {
+    margin-top: 60px;
+  }
+  .cover-title {
+    font-size: 38px;
+    font-weight: 900;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #FFFFFF 30%, #E2E8F0 60%, #38BDF8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .cover-subtitle {
+    font-size: 18px;
+    color: #94A3B8;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+  .cover-features {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .cover-feat-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 16px;
+    border-radius: 8px;
+  }
+  .cover-feat-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #F8FAFC;
+    margin-bottom: 4px;
+  }
+  .cover-feat-desc {
+    font-size: 11.5px;
+    color: #94A3B8;
+    line-height: 1.4;
+  }
+  .cover-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #64748B;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4 {
+    color: #0F172A;
+    font-weight: 700;
+    page-break-after: avoid;
+  }
+  h1.chapter-title {
+    font-size: 24px;
+    border-bottom: 2.5px solid #2563EB;
+    padding-bottom: 8px;
+    margin-top: 15px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 {
+    font-size: 17px;
+    margin-top: 22px;
+    margin-bottom: 10px;
+    color: #1E293B;
+    border-left: 4px solid #2563EB;
+    padding-left: 10px;
+  }
+  h3 {
+    font-size: 14.5px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    color: #334155;
+  }
+  p {
+    margin-bottom: 10px;
+    color: #334155;
+    text-align: justify;
+  }
+  ul, ol {
+    margin-bottom: 12px;
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 5px;
+    color: #334155;
+  }
+
+  /* Table of Contents */
+  .toc {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 25px;
+  }
+  .toc-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 14px;
+    color: #0F172A;
+    border-bottom: 1.5px solid #CBD5E1;
+    padding-bottom: 6px;
+  }
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+  }
+  .toc-item a {
+    color: #2563EB;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .toc-dots {
+    flex: 1;
+    border-bottom: 1px dotted #94A3B8;
+    margin: 0 10px 4px 10px;
+  }
+
+  /* Code Blocks */
+  pre { page-break-inside: avoid;
+    background: #0F172A;
+    color: #F8FAFC;
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 11.5px;
+    line-height: 1.45;
+    overflow-x: auto;
+    margin: 10px 0 14px 0;
+    border: 1px solid #1E293B;
+  }
+  code {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: 12px;
+    background: #F1F5F9;
+    color: #0F172A;
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid #E2E8F0;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border: none;
+    font-size: 11.5px;
+  }
+
+  /* Callout Boxes */
+  .callout { page-break-inside: avoid;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 12px 0 14px 0;
+    font-size: 12.5px;
+  }
+  .callout-info {
+    background: #EFF6FF;
+    border-left: 4px solid #3B82F6;
+    color: #1E40AF;
+  }
+  .callout-tip {
+    background: #ECFDF5;
+    border-left: 4px solid #10B981;
+    color: #065F46;
+  }
+  .callout-warn {
+    background: #FFFBEB;
+    border-left: 4px solid #F59E0B;
+    color: #92400E;
+  }
+  .callout-strong {
+    font-weight: 700;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Tables */
+  table { page-break-inside: avoid;
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px 0;
+    font-size: 12px;
+  }
+  th, td {
+    border: 1px solid #CBD5E1;
+    padding: 8px 10px;
+    text-align: left;
+  }
+  th {
+    background: #F1F5F9;
+    color: #0F172A;
+    font-weight: 700;
+  }
+  tr:nth-child(even) td {
+    background: #F8FAFC;
+  }
+
+  /* Image Containers */
+  .img-box {
+    text-align: center;
+    margin: 14px 0 18px 0;
+  }
+  .img-box img {
+    max-width: 90%;
+    max-height: 480px;
+    border-radius: 6px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  .img-caption {
+    font-size: 11.5px;
+    color: #64748B;
+    margin-top: 6px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+  <!-- ==================== 封面 ==================== -->
+  <div class="cover">
+    <div>
+      <div class="cover-badge">⚡️ 2026 工业级交付指南 · 工程实操手册</div>
+      <div class="cover-title-group">
+        <h1 class="cover-title">AI Agent 全栈开发与<br>商业落地工程实操手册</h1>
+        <p class="cover-subtitle">从单节点逻辑到多智能体编排 · 从技术底座到三大千万级交付项目实战</p>
+      </div>
+
+      <div class="cover-features">
+        <div class="cover-feat-item">
+          <div class="cover-feat-title">🗺️ 14 步全景就业路线</div>
+          <div class="cover-feat-desc">Python/FastAPI、Transformer、RAG、Tool Calling、LangGraph 与 Eino 实操。</div>
+        </div>
+        <div class="cover-feat-item">
+          <div class="cover-feat-title">⚙️ 核心技术底座全代码</div>
+          <div class="cover-feat-desc">Prompt Cache 降本 80%、混合 RAG 流水线、Function Calling 原生闭环与 BERT 意图分类。</div>
+        </div>
+        <div class="cover-feat-item">
+          <div class="cover-feat-title">🏢 3 大企业级商用案例</div>
+          <div class="cover-feat-desc">千万级智能客服交付方案、Dify 电商售后助手、医疗多模态问诊三级消歧系统。</div>
+        </div>
+        <div class="cover-feat-item">
+          <div class="cover-feat-title">🎯 生产防御与算法八股</div>
+          <div class="cover-feat-desc">防死循环熔断器源码、科学评测指标体系、STAR 高分简历与大厂真题通关。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cover-footer">
+      <span>编写整理：Zack & AI Agent 研发实践小组</span>
+      <span>版本：v2.0 · 生产实操版</span>
+      <span>适用对象：后端工程师 / 算法工程师 / AI 应用架构师</span>
+    </div>
+  </div>
+
+  <!-- ==================== 目录 ==================== -->
+  <div class="page-break"></div>
+  <div class="toc">
+    <div class="toc-title">📖 手册目录索引 (Contents)</div>
+    <div class="toc-item"><span>第 1 章：Agent 业务定位与任务拆解实操手册</span><span class="toc-dots"></span><span>P 3</span></div>
+    <div class="toc-item"><span>第 2 章：Agent 14 步就业路线与全栈技术栈手册</span><span class="toc-dots"></span><span>P 5</span></div>
+    <div class="toc-item"><span>第 3 章：经典 Agent 运行决策体系与规划算法实操</span><span class="toc-dots"></span><span>P 8</span></div>
+    <div class="toc-item"><span>第 4 章：大模型工具调用（Tool Calling）与微调实操</span><span class="toc-dots"></span><span>P 11</span></div>
+    <div class="toc-item"><span>第 5 章：企业级知识库增强（RAG）流水线实操手册</span><span class="toc-dots"></span><span>P 14</span></div>
+    <div class="toc-item"><span>第 6 章：主流框架编排实操手册（Dify、LangGraph、Eino）</span><span class="toc-dots"></span><span>P 17</span></div>
+    <div class="toc-item"><span>第 7 章：三大工业级商用项目端到端交付手册</span><span class="toc-dots"></span><span>P 20</span></div>
+    <div class="toc-item"><span>第 8 章：生产高可用、安全防御与面试通关手册</span><span class="toc-dots"></span><span>P 24</span></div>
+    <div class="toc-item"><span>附录：AI Agent 常用命令与速查表</span><span class="toc-dots"></span><span>P 27</span></div>
+  </div>
+
+  <!-- ==================== 第 1 章 ==================== -->
+  <h1 class="chapter-title">第 1 章：Agent 业务定位与任务拆解实操手册</h1>
+
+  <div class="callout callout-info">
+    <div class="callout-strong">💡 本章实操目标</div>
+    建立正确的 Agent 产品与工程定位，掌握“化整为零”的业务拆解方法，避开盲目手写单步长提示词的误区，构建可持续迭代的 Prompt 工程。
+  </div>
+
+  <h2>1.1 精准定位问题属性：区分一次性需求与高频流程</h2>
+  <p>在立项或动手编写代码前，必须对业务问题进行严格定性。如果问题属性判断错误，往往会导致“杀鸡用牛刀”或工程交付失败：</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">评估维度</th>
+        <th style="width: 35%;">一次性临时需求</th>
+        <th style="width: 40%;">高频重复的固定流程（Agent 核心场景）</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>业务特征</strong></td>
+        <td>偶尔发生、需求变化大、发散性强</td>
+        <td>每天高频重复、规则相对明确、步骤固定</td>
+      </tr>
+      <tr>
+        <td><strong>典型场景</strong></td>
+        <td>写行业周报、翻译短文、头脑风暴创意</td>
+        <td>电商售后查单流转、招聘简历初筛匹配、工单流转</td>
+      </tr>
+      <tr>
+        <td><strong>技术实现</strong></td>
+        <td>单次 Chatbot 对话或简单 Prompt 即可</td>
+        <td>Agent 状态图工作流 + 多工具调用 + 数据库读写</td>
+      </tr>
+      <tr>
+        <td><strong>容错机制</strong></td>
+        <td>允许模型自由发挥，人工直接纠偏</td>
+        <td>必须输出标准结构化 JSON，设置死循环熔断与兜底</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>1.2 任务流程拆解：“化整为零”的工程原则</h2>
+  <p>初学者最大的误区是试图通过一段长达 2000 字的 Prompt 一步解决所有问题。工业级标准做法是<strong>化整为零</strong>：将端到端流程切分为独立单节点（Node），先保证单节点准确率达标，再通过状态图（State Graph）串联。</p>
+
+  <div class="img-box avoid-break">
+    <img src="{{IMG_1}}" alt="智能体搭建心得 1">
+    <div class="img-caption">图 1-1：Agent 智能体搭建心得 —— 流程拆解与问题属性定位</div>
+  </div>
+
+  <div class="img-box avoid-break">
+    <img src="{{IMG_2}}" alt="智能体搭建心得 2">
+    <div class="img-caption">图 1-2：Agent 智能体搭建心得 —— 善用平台工具与先以自用为主</div>
+  </div>
+
+  <div class="callout callout-tip">
+    <div class="callout-strong">🎯 新手最佳上手策略</div>
+    切忌一开始就做通用自主操作系统。推荐从自身每天遇到的机械重复痛点起步（如：“每日 Git 提交日志总结”、“本地 Markdown 知识库精准问答”），通过真实正向反馈逐步深入复杂架构。
+  </div>
+
+  <!-- ==================== 第 2 章 ==================== -->
+  <div class="page-break"></div>
+  <h1 class="chapter-title">第 2 章：Agent 14 步就业路线与全栈技术栈手册</h1>
+
+  <div class="callout callout-info">
+    <div class="callout-strong">💡 本章实操目标</div>
+    系统梳理从底层语言基础到顶层架构设计的 14 步全景学习路线图，建立完整的开发环境并掌握每一个步骤的达标自测标准。
+  </div>
+
+  <h2>2.1 14 步进阶成长全景图</h2>
+  <p>以下为业内一线大厂 Agent 应用研发的核心技能图谱，分为基础准备、模型底座、知识与工具连接、多智能体编排与商业交付五大阶段：</p>
+
+  <div class="img-box avoid-break">
+    <img src="{{IMG_0}}" alt="Agent开发就业路线">
+    <div class="img-caption">图 2-1：Agent 全栈开发与就业进阶 14 步全景路线图</div>
+  </div>
+
+  <h2>2.2 基础环境安装与服务化搭建实操</h2>
+  <p>现代大模型工程推荐使用高性能的 <code>uv</code> 进行环境与依赖隔离：</p>
+
+  <pre><code># 1. 安装极速包管理工具 uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. 初始化工程工作区
+uv init agent-lab
+cd agent-lab
+
+# 3. 安装全栈核心依赖
+uv add fastapi uvicorn pydantic httpx openai langchain langgraph
+uv add chromadb sentence-transformers
+</code></pre>
+
+  <h3>FastAPI SSE 流式输出接口标准实现</h3>
+  <p>让前端展示 Agent “思考中”、“检索中”、“最终生成”的实时打字机效果：</p>
+
+  <pre><code>from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+import asyncio, json
+
+app = FastAPI(title="Agent Streaming Service")
+
+async def agent_trace_stream(user_query: str):
+    stages = [
+        ("thought", "正在分析用户意图并提取关键参数..."),
+        ("tool_call", "触发外部工具: query_inventory(sku_id='A102')"),
+        ("observation", "工具返回: 华东一号仓尚有库存 42 件"),
+        ("answer", "为您查询到该商品目前库存充足，可直接下单。")
+    ]
+    for stage_type, text in stages:
+        chunk = json.dumps({"type": stage_type, "content": text}, ensure_ascii=False)
+        yield f"data: {chunk}\n\n"
+        await asyncio.sleep(0.5)
+
+@app.get("/api/chat/stream")
+async def chat_stream(query: str):
+    return StreamingResponse(agent_trace_stream(query), media_type="text/event-stream")
+</code></pre>
+
+  <!-- ==================== 第 3 章 ==================== -->
+  <div class="page-break"></div>
+  <h1 class="chapter-title">第 3 章：经典 Agent 运行决策体系与规划算法实操</h1>
+
+  <h2>3.1 感知-规划-行动（Perception-Planning-Action）核心循环</h2>
+  <p>一个健壮的 Agent 运行体系由感知、大脑决策与外部行动三个核心组件交织构成：</p>
+
+  <div class="img-box avoid-break">
+    <img src="{{IMG_9}}" alt="大厂Agent决策模型">
+    <div class="img-caption">图 3-1：经典 Agent 感知-规划-行动运行闭环与大厂落地架构</div>
+  </div>
+
+  <h2>3.2 ReAct 思考与规划引擎手写实操</h2>
+  <p>ReAct（Reason + Act）是目前最通用、最可靠的 Agent 决策循环。模型交替进行“思考”与“调用工具”：</p>
+
+  <div class="img-box avoid-break">
+    <img src="{{IMG_3}}" alt="商用Agent规划图">
+    <div class="img-caption">图 3-2：商用 Agent 架构设计与 ReAct / Deep Research 流程图</div>
+  </div>
+
+  <h3>原生 Python 实现 ReAct 运行循环</h3>
+  <pre><code>import json
+
+def run_react_loop(llm_client, user_query: str, tools_registry: dict, max_steps: int = 5):
+    # 原生实现的 ReAct 运行循环，不依赖任何三方重型编排框架
+    messages = [
+        {"role": "system", "content": "你是一个能够调用工具解决问题的智能体。在调用工具前请输出思考过程。"},
+        {"role": "user", "content": user_query}
+    ]
+
+    for step in range(max_steps):
+        # 1. 触发大模型推理
+        response = llm_client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            tools=[tool["schema"] for tool in tools_registry.values()]
+        )
+        msg = response.choices[0].message
+        messages.append(msg)
+
+        # 2. 如果模型直接输出文本而不需要调用工具，则任务完成
+        if not msg.tool_calls:
+            return msg.content
+
+        # 3. 遍历并执行模型决定的工具调用
+        for tool_call in msg.tool_calls:
+            fn_name = tool_call.function.name
+            fn_args = json.loads(tool_call.function.arguments)
+            
+            tool_func = tools_registry[fn_name]["func"]
+            tool_output = tool_func(**fn_args)
+
+            # 4. 将观察结果作为 tool 消息追加回上下文
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "name": fn_name,
+                "content": json.dumps(tool_output, ensure_ascii=False)
+            })
+
+    return "达到最大思考步数限制，转入人工兜底流程。"
+</code></pre>
+
+  <!-- ==================== 第 4 章 ==================== -->
+  <div class="page-break"></div>
+  <h1 class="chapter-title">第 4 章：大模型工具调用（Tool Calling）与微调实操</h1>
+
+  <div class="callout callout-info">
+    <div class="callout-strong">💡 本章核心铁律</div>
+    大语言模型不会、也不能直接运行你的操作系统或 Python 进程。模型只负责根据工具 Schema 产生符合语法的 JSON 参数；真正的执行发生在宿主环境（Host）中。
+  </div>
+
+  <h2>4.1 OpenAI Function Calling 数据交互全流程</h2>
+  <div class="img-box avoid-break">
+    <img src="{{IMG_10}}" alt="Function Calling 流程">
+    <div class="img-caption">图 4-1：OpenAI Function Calling 数据闭环与工具能力微调格式</div>
+  </div>
+
+  <h2>4.2 网关层轻量 BERT 意图分类器实操（降低 60% 成本）</h2>
+  <p>在大型企业系统中，如果每一次用户寒暄都请求 70B 大模型，将造成极大的算力浪费。工业界成熟做法是在网关层使用轻量分类器（如 BERT）在 15ms 内完成分流：</p>
+
+  <div class="img-box avoid-break">
+    <img src="{{IMG_6}}" alt="智能客服需求与意图分类">
+    <div class="img-caption">图 4-2：智能客服核心业务需求对照与 BERT 分类模型结构</div>
+  </div>
+
+  <h3>PyTorch 实现 BERT 意图分类器</h3>
+  <pre><code>import torch
+import torch.nn as nn
+from transformers import BertModel
+
+class GatewayIntentClassifier(nn.Module):
+    # 网关前置意图分类模型 (咨询 / 查单 / 投诉 / 闲聊)
+    # 可在 15ms 内过滤 60% 以上高频常见请求
+    def __init__(self, bert_path: str, num_classes: int = 4):
+        super().__init__()
+        self.bert = BertModel.from_pretrained(bert_path)
+        self.dropout = nn.Dropout(0.1)
+        self.fc = nn.Linear(self.bert.config.hidden_size, num_classes)
+
+    def forward(self, input_ids, attention_mask):
+        outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+        # 提取 [CLS] 特征进行下游分类
+        cls_rep = outputs.pooler_output
+        logits = self.fc(self.dropout(cls_rep))
+        return logits
+</code></pre>
+
+  <!-- ==================== 第 5 章 ==================== -->
+  <div class="page-break"></div>
+  <h1 class="chapter-title">第 5 章：企业级知识库增强（RAG）流水线实操手册</h1>
+
+  <h2>5.1 工业级切分与索引配置标准</h2>
+  <p>单靠简单的向量余弦检索无法应对生僻专有名词与编号。生产环境必须采用<strong>混合检索（BM25 + 向量）+ 重排序（Rerank）</strong>机制：</p>
+
+  <div class="img-box avoid-break">
+    <img src="{{IMG_5}}" alt="Dify知识库配置">
+    <div class="img-caption">图 5-1：企业知识库通用分段、高质量索引与混合检索配置实操</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>配置环节</th>
+        <th>生产推荐参数</th>
+        <th>核心技术原因</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Chunking 切分</strong></td>
+        <td>500 ~ 800 Tokens（10% 重叠）</td>
+        <td>保留完整的业务语义段落，重叠区防止边界截断</td>
+      </tr>
+      <tr>
+        <td><strong>索引质量</strong></td>
+        <td>高质量索引（High Quality）</td>
+        <td>自动清理网页 HTML 乱码、特殊不可见符号与格式噪点</td>
+      </tr>
+      <tr>
+        <td><strong>Embedding 模型</strong></td>
+        <td><code>text-embedding-v2</code> / <code>bge-large-zh-v1.5</code></td>
+        <td>1024/1536 维，中文密集向量表征能力优秀</td>
+      </tr>
+      <tr>
+        <td><strong>检索模式</strong></td>
+        <td>混合检索（Hybrid: BM25 + Vector）</td>
+        <td>BM25 精确命中 SKU/订单号；向量匹配同义泛化语义</td>
+      </tr>
+      <tr>
+        <td><strong>重排序 (Rerank)</strong></td>
+        <td><code>bge-reranker-large</code> (Top-K 过滤)</td>
+        <td>使用 Cross-Encoder 计算全局上下文真实相关度得分</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== 第 6 章 ==================== -->
+  <div class="page-break"></div>
+  <h1 class="chapter-title">第 6 章：主流框架编排实操手册（Dify、LangGraph、Eino）</h1>
+
+  <h2>6.1 经典开源自主 Agent 框架架构解密</h2>
+  <div class="img-box avoid-break">
+    <img src="{{IMG_8}}" alt="经典Agent开源项目">
+    <div class="img-caption">图 6-1：10 个经典开源自主 Agent 项目架构与核心类设计</div>
+  </div>
+
+  <h2>6.2 LangGraph 状态图与条件边完整工程代码</h2>
+  <p>LangGraph 通过有向状态图支持循环迭代、工具挂载与死循环中断：</p>
+
+  <pre><code>from typing import TypedDict, Annotated, Sequence
+import operator
+from langchain_core.messages import BaseMessage, HumanMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+from langchain_core.tools import tool
+from langgraph.graph import StateGraph, END
+
+# 1. 定义业务工具
+@tool
+def check_order_delivery(order_id: str) -> str:
+    """根据订单号查询真实物流配送状态"""
+    return f"订单 {order_id} 已从华东中转站发出，预计今日 18:00 送达。"
+
+tools = [check_order_delivery]
+model = ChatOpenAI(model="gpt-4o", temperature=0).bind_tools(tools)
+
+# 2. 定义全图共享状态
+class GraphState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], operator.add]
+
+# 3. 定义图节点
+def agent_node(state: GraphState):
+    return {"messages": [model.invoke(state["messages"])]}
+
+def tool_node(state: GraphState):
+    last_msg = state["messages"][-1]
+    results = []
+    for call in last_msg.tool_calls:
+        output = check_order_delivery.invoke(call["args"])
+        results.append(ToolMessage(tool_call_id=call["id"], content=str(output)))
+    return {"messages": results}
+
+# 4. 动态路由判断
+def router_edge(state: GraphState):
+    last_msg = state["messages"][-1]
+    if hasattr(last_msg, "tool_calls") and len(last_msg.tool_calls) > 0:
+        return "tools"
+    return END
+
+# 5. 编译运行图
+wf = StateGraph(GraphState)
+wf.add_node("agent", agent_node)
+wf.add_node("tools", tool_node)
+wf.set_entry_point("agent")
+wf.add_conditional_edges("agent", router_edge, {"tools": "tools", END: END})
+wf.add_edge("tools", "agent")
+graph_app = wf.compile()
+</code></pre>
+
+  <!-- ==================== 第 7 章 ==================== -->
+  <div class="page-break"></div>
+  <h1 class="chapter-title">第 7 章：三大工业级商用项目端到端交付手册</h1>
+
+  <h2>7.1 案例一：千万级对话智能客服系统（已交付商用方案）</h2>
+  <div class="img-box avoid-break">
+    <img src="{{IMG_4}}" alt="智能客服系统架构图">
+    <div class="img-caption">图 7-1：基于 Agent 的企业高可用智能客服端到端全链路架构</div>
+  </div>
+
+  <div class="callout callout-tip">
+    <div class="callout-strong">🚀 核心业务成效</div>
+    意图识别准确率从传统系统的 65% 跃升至 <strong>92%</strong>，多轮对话完成率达到 <strong>78%</strong>，日均稳定承接 10 万+ 对话，节约 60% 人力开销。
+  </div>
+
+  <h2>7.2 案例二：AI 智能医疗多模态问诊系统（复杂工作流）</h2>
+  <div class="img-box avoid-break">
+    <img src="{{IMG_11}}" alt="医疗问诊系统架构">
+    <div class="img-caption">图 7-2：医疗智能问诊画布工作流与三级分类患者画像消歧体系</div>
+  </div>
+
+  <h3>患者画像动态加权消歧代码实现</h3>
+  <pre><code>from pydantic import BaseModel
+from typing import Literal
+
+class PatientRecord(BaseModel):
+    age: int
+    gender: Literal["male", "female"]
+    history: list[str] = []
+
+def clinical_triage_disambiguate(symptom: str, patient: PatientRecord) -> dict:
+    """三级消歧：当主诉模糊（胸闷、心慌）时，结合画像动态推理危急等级"""
+    if "胸闷" in symptom or "心慌" in symptom:
+        if patient.age >= 60 or "高血压" in patient.history:
+            return {
+                "dept": "急诊科 / 心内科",
+                "level": "CRITICAL",
+                "guide": "检测到高龄及既往心血管风险，建议立即前往急诊查心电图与心肌标志物！"
+            }
+        else:
+            return {
+                "dept": "普通内科 / 心理科",
+                "level": "NORMAL",
+                "guide": "年轻群体多见于神经衰弱或过度疲劳，建议补充作息情况并预约普通门诊。"
+            }
+    return {"dept": "全科导诊", "level": "LOW", "guide": "请补充具体的症状持续时间。"}
+</code></pre>
+
+  <!-- ==================== 第 8 章 ==================== -->
+  <div class="page-break"></div>
+  <h1 class="chapter-title">第 8 章：生产高可用、安全防御与面试通关手册</h1>
+
+  <h2>8.1 生产级防死循环熔断器（Circuit Breaker）实操实现</h2>
+  <p>Agent 如果因工具入参错误而反复重试，会迅速耗尽上下文并造成严重成本事故。必须在执行层注入死循环熔断器：</p>
+
+  <pre><code>class AgentCircuitBreaker:
+    def __init__(self, max_turns: int = 6, max_repeat_calls: int = 2):
+        self.max_turns = max_turns
+        self.max_repeat_calls = max_repeat_calls
+        self.call_history = []
+
+    def verify_and_record(self, tool_name: str, tool_args: dict):
+        self.call_history.append((tool_name, tool_args))
+        # 1. 检查总迭代轮次
+        if len(self.call_history) > self.max_turns:
+            raise RuntimeError("触发最大运行轮次安全熔断，强制中止执行并转人工坐席。")
+
+        # 2. 检查连续相同工具调用
+        if len(self.call_history) >= self.max_repeat_calls:
+            recent = [name for name, _ in self.call_history[-self.max_repeat_calls:]]
+            if len(set(recent)) == 1:
+                raise RuntimeError(f"检测到工具 {tool_name} 发生无进展连续重复调用，触发安全拦截。")
+</code></pre>
+
+  <h2>8.2 STAR 法则高分简历包装模板</h2>
+  <div class="callout callout-info">
+    <p><strong>[S 业务背景]</strong> 主导企业日均 10 万次会话的多渠道智能客服 Agent 系统重构；</p>
+    <p><strong>[T 核心难点]</strong> 传统方案规则僵化（识别率仅 65%），大模型单 Prompt 幻觉多、延迟高、多轮长会话费用不可控；</p>
+    <p><strong>[A 架构方案]</strong> 基于 LangGraph 搭建带三路分流的状态机；网关层引入 BERT 轻量前置分类器过滤 60% 高频意图；搭建混合 RAG 与 Prompt Cache 架构；实现带熔断机制的 Tool Calling 执行引擎；</p>
+    <p><strong>[R 最终成效]</strong> 意图识别准确率达 92%，复杂任务完成率 78%，首字延迟降低 45%，Token 成本降低 60%，为团队节约 60% 客服人力支出。</p>
+  </div>
+
+  <h2>8.3 大厂技术面试高频通关真题</h2>
+  <p><strong>Q: 为什么不用超长 Prompt 一次性搞定，而要做节点化工作流？</strong><br>
+  <strong>A:</strong> 1. 注意力衰减（Lost in the Middle）与幻觉率随 Prompt 长度指数级上升；2. 无法进行模块化单元测试与灰度发布；3. 无法按节点精细化分配模型算力与混合编排，导致成本与延迟居高不下。</p>
+
+  <p><strong>Q: 向量检索在 RAG 场景中遇到生僻词失效怎么办？</strong><br>
+  <strong>A:</strong> 必须引入混合检索（Hybrid Search，向量 + BM25 稀疏检索），并结合交叉编码器模型（如 BGE-Reranker）进行二次重排序打分，兼顾语义联想与词法精确匹配。</p>
+
+  <!-- ==================== 附录 ==================== -->
+  <div class="page-break"></div>
+  <h1 class="chapter-title">附录：AI Agent 常用命令与技术速查表</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>场景需求</th>
+        <th>常用工具 / 框架</th>
+        <th>核心 CLI 命令或核心包</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>环境与依赖</strong></td>
+        <td>Astral uv</td>
+        <td><code>uv init &amp;&amp; uv add fastapi uvicorn openai</code></td>
+      </tr>
+      <tr>
+        <td><strong>后端流式接口</strong></td>
+        <td>FastAPI</td>
+        <td><code>uvicorn main:app --reload --port 8000</code></td>
+      </tr>
+      <tr>
+        <td><strong>状态图编排</strong></td>
+        <td>LangGraph</td>
+        <td><code>from langgraph.graph import StateGraph, END</code></td>
+      </tr>
+      <tr>
+        <td><strong>开源自主 Agent</strong></td>
+        <td>SuperAGI / AutoGPT</td>
+        <td><code>GoalBasedWorkflow, TaskList</code></td>
+      </tr>
+      <tr>
+        <td><strong>知识库平台</strong></td>
+        <td>Dify / Coze</td>
+        <td>Docker 一键部署、OpenAPI Webhook 对接</td>
+      </tr>
+      <tr>
+        <td><strong>标准化协议</strong></td>
+        <td>Anthropic MCP</td>
+        <td>JSON-RPC 2.0 (stdio / SSE 模式)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-tip" style="margin-top: 30px; text-align: center;">
+    <strong>祝愿你在 AI Agent 全栈开发与架构设计的道路上持续精进，顺利实现工业级项目落地与职业跃迁！</strong>
+  </div>
+
+</body>
+</html>

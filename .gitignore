@@ -1,0 +1,7 @@
+node_modules/
+.pdf_build/
+*.log
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
