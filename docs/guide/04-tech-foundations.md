@@ -36,6 +36,8 @@ sequenceDiagram
     Note over LLM: 结合真实业务事实<br/>生成最终自然语言
     LLM-->>App: "您的订单 20260901 目前正由顺丰速运承运中..."
     App-->>User: 渲染最终答复
+
+
 ```
 
 #### Tool Calling 四阶段报文数据结构标准
@@ -51,6 +53,8 @@ flowchart LR
     P4["4. 最终自然语言答复\n{\n  'role': 'assistant',\n  'content': '您的订单 20260901 正在顺丰承运中...'\n}"]
 
     P1 --> P2 --> P3 --> P4
+
+
 ```
 
 ---
@@ -66,10 +70,12 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    Req[用户请求到达网关] --> Gate[网关前置: 轻量 BERT 分类器 (耗时 < 15ms)]
+    Req["用户请求到达网关] --> Gate["网关前置: 轻量 BERT 分类器 (耗时 < 15ms)""]
     Gate --> Judge{置信度与意图分类}
-    Judge -- 高频固定意图 (如: 打招呼/人工直转) --> CacheResp[直接走本地预设模板/规则回复\n(零 Token 成本 / 15ms 极速响应)]
-    Judge -- 复杂业务/多轮意图 (如: 售后查单/政策咨询) --> AgentCore[转发至大模型 Agent 核心\n(结合 Tool Calling 与 RAG 深度推理)]
+    Judge -- 高频固定意图 (如: 打招呼/人工直转) --> CacheResp["直接走本地预设模板/规则回复\n(零 Token 成本 / 15ms 极速响应)"]
+    Judge -- 复杂业务/多轮意图 (如: 售后查单/政策咨询) --> AgentCore["转发至大模型 Agent 核心\n(结合 Tool Calling 与 RAG 深度推理)"]
+
+
 ```
 
 - **核心收益**：**在网关层毫秒级拦截 60% 以上的无用 Token 消耗**，将企业大模型服务器资源集中留给需要复杂推理的长尾疑难问题，整体降本达 **60% 以上**。
@@ -80,7 +86,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    subgraph WithoutCache[❌ 无缓存模式 (每次全量重新计算)]
+    subgraph WithoutCache["❌ 无缓存模式 (每次全量重新计算)"]
         Sys1[系统角色 2000字] --> Compute1[全量 Attention 矩阵计算]
         Tools1[工具说明 5000字] --> Compute1
         History1[多轮历史 3000字] --> Compute1
@@ -89,10 +95,12 @@ flowchart TD
     end
 
     subgraph WithPromptCache[✅ 启用 Prompt Cache 静态前缀锁定]
-        Sys2[固定静态前缀: System Prompt + Tool Schemas (7000字)] --> Hit[⚡ 命中显存已存 KV Cache (零重新计算!)]
-        History2[动态后缀: 会话历史 + 用户新输入] --> Compute2[仅需计算动态增量 (3020字)]
+        Sys2["固定静态前缀: System Prompt + Tool Schemas (7000字)"] --> Hit["⚡ 命中显存已存 KV Cache (零重新计算!)"]
+        History2["动态后缀: 会话历史 + 用户新输入] --> Compute2["仅需计算动态增量 (3020字)""]
         Hit & Compute2 --> Cost2[计费: 前缀享受 80%~90% 折扣\n首字延迟: 骤降至 600ms]
     end
+
+
 ```
 
 ---
@@ -114,6 +122,8 @@ quadrantChart
     "企业当季售后退货时效政策": [0.80, 0.35]
     "特定医疗病历结构化输出格式": [0.25, 0.88]
     "通用邮件客套话 / 翻译 / 润色": [0.20, 0.20]
+
+
 ```
 
 ### 3.2 典型工业级工具类型矩阵表

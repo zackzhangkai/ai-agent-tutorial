@@ -27,7 +27,7 @@
 
 ```mermaid
 flowchart TD
-    Req[用户请求] --> PromptCache[1. Prompt Cache 缓存优化\n(固定前缀锁定 / 降低 80% 账单)]
+    Req["用户请求] --> PromptCache["1. Prompt Cache 缓存优化\n(固定前缀锁定 / 降低 80% 账单)""]
     PromptCache --> LLM[2. 大模型推理引擎]
     LLM --> Breaker{3. Circuit Breaker 熔断检测}
     
@@ -37,6 +37,8 @@ flowchart TD
     
     Executor --> Eval[5. 后置安全审查与事实接地 Grounding]
     Eval --> Out([安全交付用户])
+
+
 ```
 
 ### 1. 幻觉产生的本质与工业级四大防御手段
@@ -74,6 +76,8 @@ stateDiagram-v2
     
     HalfOpen --> Closed: 探测请求成功闭环
     HalfOpen --> Open: 探测请求再次异常
+
+
 ```
 
 配套独立生产级脚本 `src/08_circuit_breaker.py`，支持：
@@ -114,25 +118,29 @@ flowchart TD
     
     Q -->|衡量 Context 中有效信息密度| M4[Context Precision 上下文精准度]
     M4 --> C
+
+
 ```
 
 ### 2. 生产级全链路可观测体系 (Trace 架构)
 
 ```mermaid
 flowchart LR
-    User[终端用户] --> TraceRoot[Trace ID: tr-2026-9988\n(全链路透传追踪标识)]
+    User["终端用户] --> TraceRoot["Trace ID: tr-2026-9988\n(全链路透传追踪标识)""]
     
     subgraph Spans[Span 调用树]
         direction TB
-        S1[Span 1: 网关鉴权与限流 (12ms)]
-        S2[Span 2: 前置 BERT 意图识别 (8ms)]
-        S3[Span 3: 混合 RAG 检索 (45ms)]
-        S4[Span 4: LLM 首字推流 + 生成 (850ms)]
-        S5[Span 5: ERP 工具调用 (120ms)]
+        S1["Span 1: 网关鉴权与限流 (12ms)"]
+        S2["Span 2: 前置 BERT 意图识别 (8ms)"]
+        S3["Span 3: 混合 RAG 检索 (45ms)"]
+        S4["Span 4: LLM 首字推流 + 生成 (850ms)"]
+        S5["Span 5: ERP 工具调用 (120ms)"]
     end
     
     TraceRoot --> S1 --> S2 --> S3 --> S4 --> S5
     Spans --> Collector[OpenTelemetry / Jaeger / Prometheus 监控大盘]
+
+
 ```
 
 ### 3. 核心指标评估矩阵

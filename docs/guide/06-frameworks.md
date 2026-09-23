@@ -56,6 +56,8 @@ flowchart TD
     App --> WebUI[Web 独立聊天页]
     App --> API[RESTful API 嵌入现有系统]
     App --> ThirdParty[飞书 / 钉钉 / 微信服务号]
+
+
 ```
 
 ### 6.2.1 手把手搭建电商客服 Agent 实操步骤
@@ -65,14 +67,16 @@ flowchart LR
     StartNode([用户开始对话]) --> FilterNode[敏感词与反作弊节点]
     FilterNode --> ClassifierNode{Dify 意图分类器节点}
     
-    ClassifierNode -- 售后政策咨询 --> KBNode[知识库检索节点\n(混合检索 + BGE Rerank)]
-    ClassifierNode -- 物流订单查询 --> ToolNode[自定义 HTTP 工具节点\n(调用外部 ERP 查询)]
+    ClassifierNode -- 售后政策咨询 --> KBNode["知识库检索节点\n(混合检索 + BGE Rerank)"]
+    ClassifierNode -- 物流订单查询 --> ToolNode["自定义 HTTP 工具节点\n(调用外部 ERP 查询)"]
     ClassifierNode -- 闲聊与打招呼 --> DirectNode[LLM 快速问答节点]
     
-    KBNode --> FormatNode[LLM 组装综合节点\n(注入语气约束与规范)]
+    KBNode --> FormatNode["LLM 组装综合节点\n(注入语气约束与规范)"]
     ToolNode --> FormatNode
     DirectNode --> EndNode([输出渲染卡片 / 微信终端])
     FormatNode --> EndNode
+
+
 ```
 
 1. **第一步：创建企业级知识库**
@@ -104,6 +108,8 @@ flowchart TD
     HumanCheck -- 需人工审批 --> Pause([挂起等待人工确认])
     HumanCheck -- 正常 --> AgentNode
     RouteCondition -- 否 --> End([__end__ 流程终止])
+
+
 ```
 
 ### 6.3.1 核心架构三要素
@@ -118,7 +124,9 @@ flowchart LR
         State3 -.->|Time Travel 支持任意回滚| State1
     end
     
-    Checkpointer --> Redis[(Postgres / Redis 持久化存储)]
+    Checkpointer --> Redis[("Postgres / Redis 持久化存储")]
+
+
 ```
 
 1. **State（全局状态载荷）**：整个图流转时共享的数据模型。LangGraph 使用类型注解（如 `Annotated[list, operator.add]`）指定 Reducer，实现消息的自动增量合并。
@@ -165,6 +173,8 @@ flowchart LR
         Middleware[高可用中间件\n熔断降级 / 令牌桶限流 / OpenTelemetry]
     end
     Request[高并发 API 请求] --> EinoCore --> Response[亚秒级低延迟响应]
+
+
 ```
 
 ### 核心特性
@@ -200,6 +210,8 @@ classDiagram
         +IterationController
         +run()
     }
+
+
 ```
 
 ### 1. AutoGPT：多目标复杂任务的自动化引擎
@@ -210,7 +222,7 @@ classDiagram
 
 ```mermaid
 flowchart TD
-    TaskQueue[(待办任务优先级队列 Task List)]
+    TaskQueue[("待办任务优先级队列 Task List")]
     
     subgraph ExecutionLoop[BabyAGI 三 Agent 自主协同循环]
         Agent1[1. Execution Agent\n取出队列顶部首个任务并调用 LLM 执行]
@@ -222,6 +234,8 @@ flowchart TD
     Agent1 -->|传递执行上下文| Agent2
     Agent2 -->|注入新任务候选集| Agent3
     Agent3 -->|写回重新排序的待办列表| TaskQueue
+
+
 ```
 
 - **三大核心协同 Agent**：

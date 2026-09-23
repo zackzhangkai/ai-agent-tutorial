@@ -37,6 +37,8 @@ flowchart TD
     P --> Brain
     Brain --> A
     A -->|修改环境状态 / 获取真实数据| Env
+
+
 ```
 
 1. **感知层（Perception）**：系统的“感官”，负责接收来自环境的复杂非结构化信号（如用户提问文本、微信语音 ASR 识别结果、化验单图片 OCR 结果），将其规整为大模型可消费的标准 Token 序列。
@@ -77,6 +79,8 @@ stateDiagram-v2
     Observation --> ModelThought: 将数据作为观察回传 (Observation)
     
     FinalAnswer --> [*]
+
+
 ```
 
 ---
@@ -97,7 +101,7 @@ stateDiagram-v2
 flowchart TD
     UserQuery[用户调研诉求: '2026年具身智能商业化落地现状'] --> PlannerNode[1. 规划节点: 拆解研报大纲与核心子问题]
     
-    subgraph ParallelSearch[2. 并行多路事实搜集与抓取 (Map 阶段)]
+    subgraph ParallelSearch["2. 并行多路事实搜集与抓取 (Map 阶段)"]
         Q1[子问题 A: 核心芯片算力进展] --> Worker1[爬虫 Worker 1: 搜索抓取 10 篇研报]
         Q2[子问题 B: 四足与双足量产出货量] --> Worker2[爬虫 Worker 2: 行业协会统计数据]
         Q3[子问题 C: 工业制造典型标杆案例] --> Worker3[爬虫 Worker 3: 领军企业招股书与财报]
@@ -107,7 +111,7 @@ flowchart TD
     PlannerNode --> Q2
     PlannerNode --> Q3
     
-    subgraph CrossVerification[3. 交叉事实校验与去重 (Cross-Check)]
+    subgraph CrossVerification["3. 交叉事实校验与去重 (Cross-Check)"]
         JudgeNode{事实核验模型: 数据是否矛盾?}
         Worker1 --> JudgeNode
         Worker2 --> JudgeNode
@@ -116,12 +120,14 @@ flowchart TD
         WebVerification --> JudgeNode
     end
     
-    subgraph Synthesis[4. 最终深度报告综合 (Reduce 阶段)]
+    subgraph Synthesis["4. 最终深度报告综合 (Reduce 阶段)"]
         JudgeNode -- 置信事实列表 --> ReportGenerator[长文本综合生成器: 按大纲结构化组织]
-        ReportGenerator --> CitationCheck[自动注入原始数据引用角标 (Citations)]
+        ReportGenerator --> CitationCheck["自动注入原始数据引用角标 (Citations)"]
     end
     
     CitationCheck --> FinalReport[交付 8000 字出版级深度研究报告]
+
+
 ```
 
 ### 3.2 生产级设计准则：12-Factor Agents 核心要义
@@ -139,6 +145,8 @@ flowchart LR
     end
 
     Principles --> ProductionReady[生产可用 / 高并发 / 可审计 / 零级事故]
+
+
 ```
 
 1. **显式状态管理**：会话状态不保存在本地内存变量中，必须持久化在 Redis 或 PostgreSQL 状态机；

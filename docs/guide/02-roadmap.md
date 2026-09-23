@@ -40,6 +40,8 @@ flowchart TD
         Step12 --> Step13[第13步: STAR 法则高分简历包装与模拟深度技术面]
         Step13 --> Step14[第14步: 面试复盘、Offer 决策与企业级交付入职]
     end
+
+
 ```
 
 ---
@@ -61,6 +63,8 @@ timeline
     2023 早期 : 纯 Prompt 对话阶段 : 尝试在单步 Prompt 中堆砌长规则 : 频繁遭遇注意力迷失与幻觉
     2023 - 2024 : RAG 知识检索时代 : 引入向量数据库与知识切片 : 静态文本问答体验提升 : 缺乏真实业务执行能力
     2025 - 2026 : Autonomous Agent 时代 : 状态图有向编排 (LangGraph) : 混合检索 + Tool Calling 闭环 : 防死循环熔断与人机在环
+
+
 ```
 
 ---
@@ -71,35 +75,37 @@ timeline
 
 ```mermaid
 flowchart TB
-    subgraph L4[顶层: 交互与体验层 (User Experience)]
+    subgraph L4["顶层: 交互与体验层 (User Experience)"]
         direction LR
         UI1[SSE 打字机流式推流]
         UI2[思维链动态展开]
         UI3[交互式卡片与富文本确认]
     end
 
-    subgraph L3[核心: 大脑与规划层 (Reasoning & Brain)]
+    subgraph L3["核心: 大脑与规划层 (Reasoning & Brain)"]
         direction LR
         B1[ReAct 推理反思引擎]
         B2[LangGraph 状态图与条件边]
         B3[动态路由与防死循环熔断]
     end
 
-    subgraph L2[桥梁: 记忆与知识层 (Memory & Knowledge)]
+    subgraph L2["桥梁: 记忆与知识层 (Memory & Knowledge)"]
         direction LR
         M1[短期 Redis 对话状态维持]
         M2[长期向量数据库检索]
         M3[BGE 交叉注意力二次重排]
     end
 
-    subgraph L1[底座: 基础设施与工具层 (Tools & Infrastructure)]
+    subgraph L1["底座: 基础设施与工具层 (Tools & Infrastructure)"]
         direction LR
         T1[OpenAI Function Calling 协议]
         T2[企业 ERP / 外部 OpenAPI]
         T3[Astral uv 高效包管理]
     end
 
-    L4 <--> L3 <--> L2 <--> L1
+    L4   <-->   L3   <-->   L2   <-->   L1
+
+
 ```
 
 | 阶段分类 | 进阶步骤 | 核心技术点与工具链 | 达标自测验收标准 |
@@ -173,6 +179,8 @@ sequenceDiagram
     
     AgentCore-->>Gateway: yield event: done (传输完毕信号)
     Gateway-->>Client: data: [DONE]\n\n
+
+
 ```
 
 在项目根目录下创建 `src/01_fastapi_sse_stream.py` 文件：

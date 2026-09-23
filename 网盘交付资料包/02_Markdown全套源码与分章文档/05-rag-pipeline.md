@@ -20,12 +20,12 @@
 ```mermaid
 flowchart TD
     Doc[原始文档: 政策规范 / FAQ / 产品手册] --> Clean[文档解析与噪音过滤]
-    Clean --> Chunk[语义分块 Chunking\n(600 tokens + 10% overlap)]
+    Clean --> Chunk["语义分块 Chunking\n(600 tokens + 10% overlap)"]
     
     subgraph Indexing[离线建库阶段]
-        Chunk --> Emb[Embedding 向量化\n(bge-large / text-embedding-v2)]
-        Chunk --> Sparse[构建 BM25 词频索引\n(专有名词精准命中)]
-        Emb --> VDB[(向量数据库\nQdrant / Milvus / Chroma)]
+        Chunk --> Emb["Embedding 向量化\n(bge-large / text-embedding-v2)"]
+        Chunk --> Sparse["构建 BM25 词频索引\n(专有名词精准命中)"]
+        Emb --> VDB[("向量数据库\nQdrant / Milvus / Chroma")]
     end
     
     UserQuery[用户提问: 包含型号代码/专有名词] --> DualSearch
@@ -41,6 +41,8 @@ flowchart TD
     Rerank --> Threshold{相关度得分 > 0.60 ?}
     Threshold -- 是 --> PromptContext[组装上下文注入大模型 Prompt]
     Threshold -- 否 --> Fallback[触发未知问题兜底话术]
+
+
 ```
 
 ---
@@ -57,20 +59,22 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    subgraph BiEncoder[Bi-Encoder 双塔架构 (用于初步粗排召回)]
+    subgraph BiEncoder["Bi-Encoder 双塔架构 (用于初步粗排召回)"]
         direction LR
         Q1[用户 Query] --> Tower1[Embedding 模型 A] --> V1[向量 Q]
         D1[知识切片 Doc] --> Tower2[Embedding 模型 B] --> V2[向量 D]
-        V1 & V2 --> Cosine[余弦相似度计算: cos_sim(Q, D)\n速度极快 / 丢失深度交互]
+        V1 & V2 --> Cosine["余弦相似度计算: cos_sim(Q, D)\n速度极快 / 丢失深度交互"]
     end
 
-    subgraph CrossEncoder[Cross-Encoder 交叉重排架构 (用于高精细排)]
+    subgraph CrossEncoder["Cross-Encoder 交叉重排架构 (用于高精细排)"]
         direction LR
         Concat["拼接输入: [CLS] Query [SEP] Document [SEP]"] --> Transformer[深度多层 Transformer 全注意力计算]
         Transformer --> Score["精准相关度打分: 0.0 ~ 1.0\n算力消耗大 / 极其精确"]
     end
 
     BiEncoder -->|初筛 Top 50 候选| CrossEncoder --> FinalTop["输出最终 Top 3~5 事实切片"]
+
+
 ```
 
 ### 2.2 工业级三级流水线的核心突破
@@ -94,6 +98,8 @@ flowchart LR
     end
 
     DualInput --> RRF_Engine --> FusedOutput
+
+
 ```
 
 ---
@@ -108,8 +114,10 @@ flowchart TD
     
     SplitMethod -- 1. 固定字符分块 --> FixChunk[简单暴力截断\n可能在句子中间一刀两断 / 不推荐]
     SplitMethod -- 2. 递归语法树分块 --> RecurChunk[依据段落回车、句号分级切分\n保留完整句子语义 / 工业界主流]
-    SplitMethod -- 3. Parent-Child 父子分块 --> PCChunk[大块存上下文(2000字)，小块建向量索引(200字)\n命中后将父文档注入 LLM / 最佳实践]
+    SplitMethod -- 3. Parent-Child 父子分块 --> PCChunk["大块存上下文(2000字)，小块建向量索引(200字)\n命中后将父文档注入 LLM / 最佳实践"]
     SplitMethod -- 4. 语义感知分块 --> SemChunk[利用 Embedding 变化剧烈度自动检测断点\n计算开销较高]
+
+
 ```
 
 ### 3.2 生产级配置参数基准表

@@ -50,9 +50,9 @@ flowchart TD
     
     subgraph Router[4. 对话策略与三路分流]
         R1{意图判定}
-        BranchA[路径 A: 简单规则/政策查阅\n(走 RAG 知识库检索)]
-        BranchB[路径 B: 复杂业务办理\n(走 Agent 任务执行引擎)]
-        BranchC[路径 C: 模糊表达/闲聊\n(走 澄清反问生成)]
+        BranchA["路径 A: 简单规则/政策查阅\n(走 RAG 知识库检索)"]
+        BranchB["路径 B: 复杂业务办理\n(走 Agent 任务执行引擎)"]
+        BranchC["路径 C: 模糊表达/闲聊\n(走 澄清反问生成)"]
     end
     DST --> Router
     R1 --> BranchA
@@ -71,6 +71,8 @@ flowchart TD
     end
     Generator --> Postprocess
     Postprocess --> Output([返回用户终端])
+
+
 ```
 
 ### 业务难点与生产级应对策略对照表
@@ -95,6 +97,8 @@ stateDiagram-v2
     HumanTakeover --> SummaryAnswer: 人工坐席批复完成
     
     SummaryAnswer --> [*]
+
+
 ```
 
 | 核心挑战 | 业务痛点描述 | 生产级解决方案 |
@@ -130,6 +134,8 @@ sequenceDiagram
     DifyApp->>Finance: 自动创建极速退款工单流水
     Finance-->>DifyApp: 原路退款成功通知
     DifyApp-->>Customer: "亲亲，已为您极速办理 68 元退款，款项将在 2 小时内原路到账！"
+
+
 ```
 
 ### 1. 知识库准备与向量分段规范
@@ -167,7 +173,7 @@ sequenceDiagram
 flowchart TD
     Patient[患者输入: 语音 / 文本 / 化验单图片] --> ASR[方言自适应 ASR 与 OCR 解析]
     
-    subgraph Level1[一级场景大类分类 (准确率 ≥ 96%)]
+    subgraph Level1["一级场景大类分类 (准确率 ≥ 96%)"]
         C1[急危重症拦截]
         C2[门诊导医分诊]
         C3[慢病健康咨询]
@@ -181,11 +187,11 @@ flowchart TD
         L2_3[消化内科]
     end
     Level1 --> Level2
-    Level2 <--> KG[(临床医学知识图谱)]
+    Level2   <-->   KG[("临床医学知识图谱")]
     
-    subgraph Level3[三级语义消歧 (画像动态加权)]
+    subgraph Level3["三级语义消歧 (画像动态加权)"]
         L3_1[主诉: '胸口闷痛、出冷汗']
-        Profile[(患者多维画像)]
+        Profile[("患者多维画像")]
         
         Judge{画像加权风险决策}
         L3_1 & Profile --> Judge
@@ -194,6 +200,8 @@ flowchart TD
         P_Young[画像 B: 22岁女性 + 熬夜诱因] --> Risk2[🟢 导向普通心内门诊\n预约常规心电图排查]
     end
     Level2 --> Level3
+
+
 ```
 
 ### 生产级独立源码（对应 `src/07_medical_triage_disambiguate.py`）

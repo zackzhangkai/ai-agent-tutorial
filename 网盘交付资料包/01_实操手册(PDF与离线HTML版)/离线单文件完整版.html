@@ -449,15 +449,17 @@ hr {
 <p>而 <strong>AI Agent（智能体）</strong> 则是给这位学者配备了<strong>“眼睛（感知能力）、双手（工具调用能力）、笔记本（长期与短期记忆）以及行动规划逻辑（决策系统）”</strong>的<strong>“全能数字员工”</strong>：
 - 他会自己先思考拆解：“我要先调用携程或航旅纵横的 API 查询航班 → 找出价格最低的一班 → 弹出确认框询问你是否同意支付 → 支付完成后自动调用企业微信或邮件接口发送假条通知”。</p>
 <pre class="mermaid">flowchart LR
-    subgraph LLM[基础大语言模型 (LLM)]
+    subgraph LLM["基础大语言模型 (LLM)"]
         A[输入: 用户文本] --> B[核心: 文本概率预测] --> C[输出: 生成文本]
     end
 
     subgraph Agent[AI Agent 智能体系统]
         D[输入: 多模态感知] --> E[大脑: 规划 + 记忆 + 反思]
-        E <--> F[工具: 查数据库 / 调接口 / 跑代码]
+        E   <-->   F[工具: 查数据库 / 调接口 / 跑代码]
         E --> G[输出: 自主执行 + 环境状态变更]
     end
+
+
 </pre>
 
 <h3 id="12">1.2 核心定义对照表</h3>
@@ -567,6 +569,8 @@ hr {
     Q2 -- 是 (需要查库/调接口/分支决策) --> Q3{业务对错误率\n是否有高容错性?}
     Q3 -- 否 (严肃财务/医疗/交易) --> PlanC[必须采用: Agent 状态图工作流\n结合轻量分类器 + 熔断兜底 + 人机在环]
     Q3 -- 是 (内部草稿/创意生成) --> PlanD[采用: 轻量自主 ReAct Agent]
+
+
 </pre>
 
 <h3 id="42">4.2 心法二：任务流程化整为零（从单节点打磨到工作流串联）</h3>
@@ -576,17 +580,19 @@ hr {
 </ul>
 <pre class="mermaid">flowchart LR
     subgraph AntiPattern[❌ 反模式：巨型单步黑盒 Prompt]
-        RawInput[用户输入] --> MonolithicPrompt[3000字超级提示词\n(意图/抽取/计算/校验/输出)]
-        MonolithicPrompt --> MonolithicOutput[不可控输出\n(高幻觉 / 难调试 / 成本高昂)]
+        RawInput["用户输入] --> MonolithicPrompt["3000字超级提示词\n(意图/抽取/计算/校验/输出)""]
+        MonolithicPrompt --> MonolithicOutput["不可控输出\n(高幻觉 / 难调试 / 成本高昂)"]
     end
 
     subgraph ModularPipeline[✅ 最佳实践：模块化工作流串联]
-        InputMsg[用户输入] --> NodeA[节点 A: 意图分类\n(轻量/5ms)]
-        NodeA --> NodeB[节点 B: 实体抽取\n(槽位严格规约)]
-        NodeB --> NodeC[节点 C: 业务工具调用\n(确定性真实查库)]
-        NodeC --> NodeD[节点 D: 礼貌话术生成\n(事实接地总结)]
+        InputMsg["用户输入] --> NodeA["节点 A: 意图分类\n(轻量/5ms)""]
+        NodeA --> NodeB["节点 B: 实体抽取\n(槽位严格规约)"]
+        NodeB --> NodeC["节点 C: 业务工具调用\n(确定性真实查库)"]
+        NodeC --> NodeD["节点 D: 礼貌话术生成\n(事实接地总结)"]
         NodeD --> SafeOutput[稳定高质交付]
     end
+
+
 </pre>
 
 <ul>
@@ -606,7 +612,7 @@ hr {
         CustomAgent[自研企业级 Agent 引擎]
     end
 
-    subgraph MCPProtocol[MCP 标准协议层 (JSON-RPC 2.0 / SSE / Stdio)]
+    subgraph MCPProtocol["MCP 标准协议层 (JSON-RPC 2.0 / SSE / Stdio)"]
         CoreSpec[统一上下文规约: Prompts / Resources / Tools]
     end
 
@@ -617,7 +623,9 @@ hr {
         S4[本地文件系统与终端执行 MCP]
     end
 
-    HostLayer <--> MCPProtocol <--> ServerLayer
+    HostLayer   <-->   MCPProtocol   <-->   ServerLayer
+
+
 </pre>
 
 <h3 id="44">4.4 心法四：提示词是系统的业务配置代码</h3>
@@ -632,11 +640,13 @@ hr {
 - 或者：“本地 Markdown 读书笔记精准检索问答 Agent”。
 当工具在现实中真正为你节省了 30 分钟时间，你所获得的确定性正反馈将驱动你快速突破后续的复杂架构。</p>
 <pre class="mermaid">flowchart LR
-    Pain[1. 识别身边真实痛点\n(如每日写周报/查物流)] --> MVP[2. 极简 MVP 脚本验证\n(1个Prompt + 1个接口)]
-    MVP --> SaveTime[3. 获得确定性正反馈\n(真实节省30分钟)]
-    SaveTime --> Iterate[4. 引入状态机与容错\n(升级为健壮系统)]
-    Iterate --> Commercial[5. 拓展为商业交付项目\n(打造高壁垒作品集)]
+    Pain["1. 识别身边真实痛点\n(如每日写周报/查物流)"] --> MVP["2. 极简 MVP 脚本验证\n(1个Prompt + 1个接口)"]
+    MVP --> SaveTime["3. 获得确定性正反馈\n(真实节省30分钟)"]
+    SaveTime --> Iterate["4. 引入状态机与容错\n(升级为健壮系统)"]
+    Iterate --> Commercial["5. 拓展为商业交付项目\n(打造高壁垒作品集)"]
     Commercial --> Pain
+
+
 </pre>
 
 <hr />
@@ -698,6 +708,8 @@ hr {
         Step12 --> Step13[第13步: STAR 法则高分简历包装与模拟深度技术面]
         Step13 --> Step14[第14步: 面试复盘、Offer 决策与企业级交付入职]
     end
+
+
 </pre>
 
 <hr />
@@ -714,41 +726,45 @@ hr {
     2023 早期 : 纯 Prompt 对话阶段 : 尝试在单步 Prompt 中堆砌长规则 : 频繁遭遇注意力迷失与幻觉
     2023 - 2024 : RAG 知识检索时代 : 引入向量数据库与知识切片 : 静态文本问答体验提升 : 缺乏真实业务执行能力
     2025 - 2026 : Autonomous Agent 时代 : 状态图有向编排 (LangGraph) : 混合检索 + Tool Calling 闭环 : 防死循环熔断与人机在环
+
+
 </pre>
 
 <hr />
 <h2 id="14_1">三、 应用场景与能力矩阵：14 步逐级拆解与验收标准</h2>
 <p>全栈 Agent 工程师需要掌握从底层基础设施到顶层用户交互的四维分层体系：</p>
 <pre class="mermaid">flowchart TB
-    subgraph L4[顶层: 交互与体验层 (User Experience)]
+    subgraph L4["顶层: 交互与体验层 (User Experience)"]
         direction LR
         UI1[SSE 打字机流式推流]
         UI2[思维链动态展开]
         UI3[交互式卡片与富文本确认]
     end
 
-    subgraph L3[核心: 大脑与规划层 (Reasoning & Brain)]
+    subgraph L3["核心: 大脑与规划层 (Reasoning & Brain)"]
         direction LR
         B1[ReAct 推理反思引擎]
         B2[LangGraph 状态图与条件边]
         B3[动态路由与防死循环熔断]
     end
 
-    subgraph L2[桥梁: 记忆与知识层 (Memory & Knowledge)]
+    subgraph L2["桥梁: 记忆与知识层 (Memory & Knowledge)"]
         direction LR
         M1[短期 Redis 对话状态维持]
         M2[长期向量数据库检索]
         M3[BGE 交叉注意力二次重排]
     end
 
-    subgraph L1[底座: 基础设施与工具层 (Tools & Infrastructure)]
+    subgraph L1["底座: 基础设施与工具层 (Tools & Infrastructure)"]
         direction LR
         T1[OpenAI Function Calling 协议]
         T2[企业 ERP / 外部 OpenAPI]
         T3[Astral uv 高效包管理]
     end
 
-    L4 <--> L3 <--> L2 <--> L1
+    L4   <-->   L3   <-->   L2   <-->   L1
+
+
 </pre>
 
 <table>
@@ -891,6 +907,8 @@ uv add fastapi &quot;uvicorn[standard]&quot; pydantic httpx openai python-dotenv
 
     AgentCore-->>Gateway: yield event: done (传输完毕信号)
     Gateway-->>Client: data: [DONE]\n\n
+
+
 </pre>
 
 <p>在项目根目录下创建 <code>src/01_fastapi_sse_stream.py</code> 文件：</p>
@@ -1068,6 +1086,8 @@ uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
     P --> Brain
     Brain --> A
     A -->|修改环境状态 / 获取真实数据| Env
+
+
 </pre>
 
 <ol>
@@ -1106,6 +1126,8 @@ uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
     Observation --> ModelThought: 将数据作为观察回传 (Observation)
 
     FinalAnswer --> [*]
+
+
 </pre>
 
 <hr />
@@ -1145,7 +1167,7 @@ uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
 <pre class="mermaid">flowchart TD
     UserQuery[用户调研诉求: '2026年具身智能商业化落地现状'] --> PlannerNode[1. 规划节点: 拆解研报大纲与核心子问题]
 
-    subgraph ParallelSearch[2. 并行多路事实搜集与抓取 (Map 阶段)]
+    subgraph ParallelSearch["2. 并行多路事实搜集与抓取 (Map 阶段)"]
         Q1[子问题 A: 核心芯片算力进展] --> Worker1[爬虫 Worker 1: 搜索抓取 10 篇研报]
         Q2[子问题 B: 四足与双足量产出货量] --> Worker2[爬虫 Worker 2: 行业协会统计数据]
         Q3[子问题 C: 工业制造典型标杆案例] --> Worker3[爬虫 Worker 3: 领军企业招股书与财报]
@@ -1155,7 +1177,7 @@ uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
     PlannerNode --> Q2
     PlannerNode --> Q3
 
-    subgraph CrossVerification[3. 交叉事实校验与去重 (Cross-Check)]
+    subgraph CrossVerification["3. 交叉事实校验与去重 (Cross-Check)"]
         JudgeNode{事实核验模型: 数据是否矛盾?}
         Worker1 --> JudgeNode
         Worker2 --> JudgeNode
@@ -1164,12 +1186,14 @@ uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
         WebVerification --> JudgeNode
     end
 
-    subgraph Synthesis[4. 最终深度报告综合 (Reduce 阶段)]
+    subgraph Synthesis["4. 最终深度报告综合 (Reduce 阶段)"]
         JudgeNode -- 置信事实列表 --> ReportGenerator[长文本综合生成器: 按大纲结构化组织]
-        ReportGenerator --> CitationCheck[自动注入原始数据引用角标 (Citations)]
+        ReportGenerator --> CitationCheck["自动注入原始数据引用角标 (Citations)"]
     end
 
     CitationCheck --> FinalReport[交付 8000 字出版级深度研究报告]
+
+
 </pre>
 
 <h3 id="32-12-factor-agents">3.2 生产级设计准则：12-Factor Agents 核心要义</h3>
@@ -1184,6 +1208,8 @@ uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
     end
 
     Principles --> ProductionReady[生产可用 / 高并发 / 可审计 / 零级事故]
+
+
 </pre>
 
 <ol>
@@ -1417,6 +1443,8 @@ if __name__ == &quot;__main__&quot;:
     Note over LLM: 结合真实业务事实<br/>生成最终自然语言
     LLM-->>App: "您的订单 20260901 目前正由顺丰速运承运中..."
     App-->>User: 渲染最终答复
+
+
 </pre>
 
 <h4 id="tool-calling_1">Tool Calling 四阶段报文数据结构标准</h4>
@@ -1430,6 +1458,8 @@ if __name__ == &quot;__main__&quot;:
     P4["4. 最终自然语言答复\n{\n  'role': 'assistant',\n  'content': '您的订单 20260901 正在顺丰承运中...'\n}"]
 
     P1 --> P2 --> P3 --> P4
+
+
 </pre>
 
 <hr />
@@ -1440,10 +1470,12 @@ if __name__ == &quot;__main__&quot;:
 - 如果每一条请求都直接唤醒 70B 参数的大模型并全量传入上万 Tokens 的工具 Schema，单次请求耗时高达 1.5~3 秒，单日 Token 消耗费用极其惊人。</p>
 <h3 id="22-dual-track-routing">2.2 解决方案：网关层双轨制（Dual-Track Routing）</h3>
 <pre class="mermaid">flowchart TD
-    Req[用户请求到达网关] --> Gate[网关前置: 轻量 BERT 分类器 (耗时 < 15ms)]
+    Req["用户请求到达网关] --> Gate["网关前置: 轻量 BERT 分类器 (耗时 < 15ms)""]
     Gate --> Judge{置信度与意图分类}
-    Judge -- 高频固定意图 (如: 打招呼/人工直转) --> CacheResp[直接走本地预设模板/规则回复\n(零 Token 成本 / 15ms 极速响应)]
-    Judge -- 复杂业务/多轮意图 (如: 售后查单/政策咨询) --> AgentCore[转发至大模型 Agent 核心\n(结合 Tool Calling 与 RAG 深度推理)]
+    Judge -- 高频固定意图 (如: 打招呼/人工直转) --> CacheResp["直接走本地预设模板/规则回复\n(零 Token 成本 / 15ms 极速响应)"]
+    Judge -- 复杂业务/多轮意图 (如: 售后查单/政策咨询) --> AgentCore["转发至大模型 Agent 核心\n(结合 Tool Calling 与 RAG 深度推理)"]
+
+
 </pre>
 
 <ul>
@@ -1452,7 +1484,7 @@ if __name__ == &quot;__main__&quot;:
 <h3 id="23-prompt-cache-kv">2.3 Prompt Cache 底层原理与 KV 显存复用</h3>
 <p>大模型在处理请求时，需要对上下文计算 Key-Value (KV) 向量并载入显存。如果前缀完全相同，服务商（如 OpenAI、DeepSeek、Claude）可以直接复用已经计算好的 KV Cache：</p>
 <pre class="mermaid">flowchart TD
-    subgraph WithoutCache[❌ 无缓存模式 (每次全量重新计算)]
+    subgraph WithoutCache["❌ 无缓存模式 (每次全量重新计算)"]
         Sys1[系统角色 2000字] --> Compute1[全量 Attention 矩阵计算]
         Tools1[工具说明 5000字] --> Compute1
         History1[多轮历史 3000字] --> Compute1
@@ -1461,10 +1493,12 @@ if __name__ == &quot;__main__&quot;:
     end
 
     subgraph WithPromptCache[✅ 启用 Prompt Cache 静态前缀锁定]
-        Sys2[固定静态前缀: System Prompt + Tool Schemas (7000字)] --> Hit[⚡ 命中显存已存 KV Cache (零重新计算!)]
-        History2[动态后缀: 会话历史 + 用户新输入] --> Compute2[仅需计算动态增量 (3020字)]
+        Sys2["固定静态前缀: System Prompt + Tool Schemas (7000字)"] --> Hit["⚡ 命中显存已存 KV Cache (零重新计算!)"]
+        History2["动态后缀: 会话历史 + 用户新输入] --> Compute2["仅需计算动态增量 (3020字)""]
         Hit & Compute2 --> Cost2[计费: 前缀享受 80%~90% 折扣\n首字延迟: 骤降至 600ms]
     end
+
+
 </pre>
 
 <hr />
@@ -1482,6 +1516,8 @@ if __name__ == &quot;__main__&quot;:
     "企业当季售后退货时效政策": [0.80, 0.35]
     "特定医疗病历结构化输出格式": [0.25, 0.88]
     "通用邮件客套话 / 翻译 / 润色": [0.20, 0.20]
+
+
 </pre>
 
 <h3 id="32">3.2 典型工业级工具类型矩阵表</h3>
@@ -1727,12 +1763,12 @@ if __name__ == &quot;__main__&quot;:
 - 大模型此时只需要发挥它强大的阅读理解和文字润色能力，给出 100% 严谨准确的答案。</p>
 <pre class="mermaid">flowchart TD
     Doc[原始文档: 政策规范 / FAQ / 产品手册] --> Clean[文档解析与噪音过滤]
-    Clean --> Chunk[语义分块 Chunking\n(600 tokens + 10% overlap)]
+    Clean --> Chunk["语义分块 Chunking\n(600 tokens + 10% overlap)"]
 
     subgraph Indexing[离线建库阶段]
-        Chunk --> Emb[Embedding 向量化\n(bge-large / text-embedding-v2)]
-        Chunk --> Sparse[构建 BM25 词频索引\n(专有名词精准命中)]
-        Emb --> VDB[(向量数据库\nQdrant / Milvus / Chroma)]
+        Chunk --> Emb["Embedding 向量化\n(bge-large / text-embedding-v2)"]
+        Chunk --> Sparse["构建 BM25 词频索引\n(专有名词精准命中)"]
+        Emb --> VDB[("向量数据库\nQdrant / Milvus / Chroma")]
     end
 
     UserQuery[用户提问: 包含型号代码/专有名词] --> DualSearch
@@ -1748,6 +1784,8 @@ if __name__ == &quot;__main__&quot;:
     Rerank --> Threshold{相关度得分 > 0.60 ?}
     Threshold -- 是 --> PromptContext[组装上下文注入大模型 Prompt]
     Threshold -- 否 --> Fallback[触发未知问题兜底话术]
+
+
 </pre>
 
 <hr />
@@ -1760,20 +1798,22 @@ if __name__ == &quot;__main__&quot;:
 2. <strong>缺乏严格上下文交叉比对</strong>：
    - 向量模型只计算 Query 与 Document 各自向量的夹角，没有让 Query 和 Document 的每一个 Token 在多头注意力机制中进行深度的交叉打分。</p>
 <pre class="mermaid">flowchart TD
-    subgraph BiEncoder[Bi-Encoder 双塔架构 (用于初步粗排召回)]
+    subgraph BiEncoder["Bi-Encoder 双塔架构 (用于初步粗排召回)"]
         direction LR
         Q1[用户 Query] --> Tower1[Embedding 模型 A] --> V1[向量 Q]
         D1[知识切片 Doc] --> Tower2[Embedding 模型 B] --> V2[向量 D]
-        V1 & V2 --> Cosine[余弦相似度计算: cos_sim(Q, D)\n速度极快 / 丢失深度交互]
+        V1 & V2 --> Cosine["余弦相似度计算: cos_sim(Q, D)\n速度极快 / 丢失深度交互"]
     end
 
-    subgraph CrossEncoder[Cross-Encoder 交叉重排架构 (用于高精细排)]
+    subgraph CrossEncoder["Cross-Encoder 交叉重排架构 (用于高精细排)"]
         direction LR
         Concat["拼接输入: [CLS] Query [SEP] Document [SEP]"] --> Transformer[深度多层 Transformer 全注意力计算]
         Transformer --> Score["精准相关度打分: 0.0 ~ 1.0\n算力消耗大 / 极其精确"]
     end
 
     BiEncoder -->|初筛 Top 50 候选| CrossEncoder --> FinalTop["输出最终 Top 3~5 事实切片"]
+
+
 </pre>
 
 <h3 id="22">2.2 工业级三级流水线的核心突破</h3>
@@ -1797,6 +1837,8 @@ if __name__ == &quot;__main__&quot;:
     end
 
     DualInput --> RRF_Engine --> FusedOutput
+
+
 </pre>
 
 <hr />
@@ -1807,8 +1849,10 @@ if __name__ == &quot;__main__&quot;:
 
     SplitMethod -- 1. 固定字符分块 --> FixChunk[简单暴力截断\n可能在句子中间一刀两断 / 不推荐]
     SplitMethod -- 2. 递归语法树分块 --> RecurChunk[依据段落回车、句号分级切分\n保留完整句子语义 / 工业界主流]
-    SplitMethod -- 3. Parent-Child 父子分块 --> PCChunk[大块存上下文(2000字)，小块建向量索引(200字)\n命中后将父文档注入 LLM / 最佳实践]
+    SplitMethod -- 3. Parent-Child 父子分块 --> PCChunk["大块存上下文(2000字)，小块建向量索引(200字)\n命中后将父文档注入 LLM / 最佳实践"]
     SplitMethod -- 4. 语义感知分块 --> SemChunk[利用 Embedding 变化剧烈度自动检测断点\n计算开销较高]
+
+
 </pre>
 
 <h3 id="32">3.2 生产级配置参数基准表</h3>
@@ -2087,6 +2131,8 @@ if __name__ == &quot;__main__&quot;:
     App --> WebUI[Web 独立聊天页]
     App --> API[RESTful API 嵌入现有系统]
     App --> ThirdParty[飞书 / 钉钉 / 微信服务号]
+
+
 </pre>
 
 <h3 id="621-agent">6.2.1 手把手搭建电商客服 Agent 实操步骤</h3>
@@ -2094,14 +2140,16 @@ if __name__ == &quot;__main__&quot;:
     StartNode([用户开始对话]) --> FilterNode[敏感词与反作弊节点]
     FilterNode --> ClassifierNode{Dify 意图分类器节点}
 
-    ClassifierNode -- 售后政策咨询 --> KBNode[知识库检索节点\n(混合检索 + BGE Rerank)]
-    ClassifierNode -- 物流订单查询 --> ToolNode[自定义 HTTP 工具节点\n(调用外部 ERP 查询)]
+    ClassifierNode -- 售后政策咨询 --> KBNode["知识库检索节点\n(混合检索 + BGE Rerank)"]
+    ClassifierNode -- 物流订单查询 --> ToolNode["自定义 HTTP 工具节点\n(调用外部 ERP 查询)"]
     ClassifierNode -- 闲聊与打招呼 --> DirectNode[LLM 快速问答节点]
 
-    KBNode --> FormatNode[LLM 组装综合节点\n(注入语气约束与规范)]
+    KBNode --> FormatNode["LLM 组装综合节点\n(注入语气约束与规范)"]
     ToolNode --> FormatNode
     DirectNode --> EndNode([输出渲染卡片 / 微信终端])
     FormatNode --> EndNode
+
+
 </pre>
 
 <ol>
@@ -2130,6 +2178,8 @@ if __name__ == &quot;__main__&quot;:
     HumanCheck -- 需人工审批 --> Pause([挂起等待人工确认])
     HumanCheck -- 正常 --> AgentNode
     RouteCondition -- 否 --> End([__end__ 流程终止])
+
+
 </pre>
 
 <h3 id="631">6.3.1 核心架构三要素</h3>
@@ -2142,7 +2192,9 @@ if __name__ == &quot;__main__&quot;:
         State3 -.->|Time Travel 支持任意回滚| State1
     end
 
-    Checkpointer --> Redis[(Postgres / Redis 持久化存储)]
+    Checkpointer --> Redis[("Postgres / Redis 持久化存储")]
+
+
 </pre>
 
 <ol>
@@ -2181,6 +2233,8 @@ if __name__ == &quot;__main__&quot;:
         Middleware[高可用中间件\n熔断降级 / 令牌桶限流 / OpenTelemetry]
     end
     Request[高并发 API 请求] --> EinoCore --> Response[亚秒级低延迟响应]
+
+
 </pre>
 
 <h3 id="_1">核心特性</h3>
@@ -2213,6 +2267,8 @@ if __name__ == &quot;__main__&quot;:
         +IterationController
         +run()
     }
+
+
 </pre>
 
 <h3 id="1-autogpt">1. AutoGPT：多目标复杂任务的自动化引擎</h3>
@@ -2222,7 +2278,7 @@ if __name__ == &quot;__main__&quot;:
 </ul>
 <h3 id="2-babyagi">2. BabyAGI：任务驱动的自驱循环</h3>
 <pre class="mermaid">flowchart TD
-    TaskQueue[(待办任务优先级队列 Task List)]
+    TaskQueue[("待办任务优先级队列 Task List")]
 
     subgraph ExecutionLoop[BabyAGI 三 Agent 自主协同循环]
         Agent1[1. Execution Agent\n取出队列顶部首个任务并调用 LLM 执行]
@@ -2234,6 +2290,8 @@ if __name__ == &quot;__main__&quot;:
     Agent1 -->|传递执行上下文| Agent2
     Agent2 -->|注入新任务候选集| Agent3
     Agent3 -->|写回重新排序的待办列表| TaskQueue
+
+
 </pre>
 
 <ul>
@@ -2311,9 +2369,9 @@ if __name__ == &quot;__main__&quot;:
 
     subgraph Router[4. 对话策略与三路分流]
         R1{意图判定}
-        BranchA[路径 A: 简单规则/政策查阅\n(走 RAG 知识库检索)]
-        BranchB[路径 B: 复杂业务办理\n(走 Agent 任务执行引擎)]
-        BranchC[路径 C: 模糊表达/闲聊\n(走 澄清反问生成)]
+        BranchA["路径 A: 简单规则/政策查阅\n(走 RAG 知识库检索)"]
+        BranchB["路径 B: 复杂业务办理\n(走 Agent 任务执行引擎)"]
+        BranchC["路径 C: 模糊表达/闲聊\n(走 澄清反问生成)"]
     end
     DST --> Router
     R1 --> BranchA
@@ -2332,6 +2390,8 @@ if __name__ == &quot;__main__&quot;:
     end
     Generator --> Postprocess
     Postprocess --> Output([返回用户终端])
+
+
 </pre>
 
 <h3 id="_1">业务难点与生产级应对策略对照表</h3>
@@ -2354,6 +2414,8 @@ if __name__ == &quot;__main__&quot;:
     HumanTakeover --> SummaryAnswer: 人工坐席批复完成
 
     SummaryAnswer --> [*]
+
+
 </pre>
 
 <table>
@@ -2413,6 +2475,8 @@ if __name__ == &quot;__main__&quot;:
     DifyApp->>Finance: 自动创建极速退款工单流水
     Finance-->>DifyApp: 原路退款成功通知
     DifyApp-->>Customer: "亲亲，已为您极速办理 68 元退款，款项将在 2 小时内原路到账！"
+
+
 </pre>
 
 <h3 id="1">1. 知识库准备与向量分段规范</h3>
@@ -2445,7 +2509,7 @@ if __name__ == &quot;__main__&quot;:
 <pre class="mermaid">flowchart TD
     Patient[患者输入: 语音 / 文本 / 化验单图片] --> ASR[方言自适应 ASR 与 OCR 解析]
 
-    subgraph Level1[一级场景大类分类 (准确率 ≥ 96%)]
+    subgraph Level1["一级场景大类分类 (准确率 ≥ 96%)"]
         C1[急危重症拦截]
         C2[门诊导医分诊]
         C3[慢病健康咨询]
@@ -2459,11 +2523,11 @@ if __name__ == &quot;__main__&quot;:
         L2_3[消化内科]
     end
     Level1 --> Level2
-    Level2 <--> KG[(临床医学知识图谱)]
+    Level2   <-->   KG[("临床医学知识图谱")]
 
-    subgraph Level3[三级语义消歧 (画像动态加权)]
+    subgraph Level3["三级语义消歧 (画像动态加权)"]
         L3_1[主诉: '胸口闷痛、出冷汗']
-        Profile[(患者多维画像)]
+        Profile[("患者多维画像")]
 
         Judge{画像加权风险决策}
         L3_1 & Profile --> Judge
@@ -2472,6 +2536,8 @@ if __name__ == &quot;__main__&quot;:
         P_Young[画像 B: 22岁女性 + 熬夜诱因] --> Risk2[🟢 导向普通心内门诊\n预约常规心电图排查]
     end
     Level2 --> Level3
+
+
 </pre>
 
 <h3 id="src07_medical_triage_disambiguatepy">生产级独立源码（对应 <code>src/07_medical_triage_disambiguate.py</code>）</h3>
@@ -2524,7 +2590,7 @@ if __name__ == &quot;__main__&quot;:
 <hr />
 <h2 id="82">8.2 核心防御机制与工程落地实操</h2>
 <pre class="mermaid">flowchart TD
-    Req[用户请求] --> PromptCache[1. Prompt Cache 缓存优化\n(固定前缀锁定 / 降低 80% 账单)]
+    Req["用户请求] --> PromptCache["1. Prompt Cache 缓存优化\n(固定前缀锁定 / 降低 80% 账单)""]
     PromptCache --> LLM[2. 大模型推理引擎]
     LLM --> Breaker{3. Circuit Breaker 熔断检测}
 
@@ -2534,6 +2600,8 @@ if __name__ == &quot;__main__&quot;:
 
     Executor --> Eval[5. 后置安全审查与事实接地 Grounding]
     Eval --> Out([安全交付用户])
+
+
 </pre>
 
 <h3 id="1">1. 幻觉产生的本质与工业级四大防御手段</h3>
@@ -2571,6 +2639,8 @@ if __name__ == &quot;__main__&quot;:
 
     HalfOpen --> Closed: 探测请求成功闭环
     HalfOpen --> Open: 探测请求再次异常
+
+
 </pre>
 
 <p>配套独立生产级脚本 <code>src/08_circuit_breaker.py</code>，支持：
@@ -2603,23 +2673,27 @@ if __name__ == &quot;__main__&quot;:
 
     Q -->|衡量 Context 中有效信息密度| M4[Context Precision 上下文精准度]
     M4 --> C
+
+
 </pre>
 
 <h3 id="2-trace">2. 生产级全链路可观测体系 (Trace 架构)</h3>
 <pre class="mermaid">flowchart LR
-    User[终端用户] --> TraceRoot[Trace ID: tr-2026-9988\n(全链路透传追踪标识)]
+    User["终端用户] --> TraceRoot["Trace ID: tr-2026-9988\n(全链路透传追踪标识)""]
 
     subgraph Spans[Span 调用树]
         direction TB
-        S1[Span 1: 网关鉴权与限流 (12ms)]
-        S2[Span 2: 前置 BERT 意图识别 (8ms)]
-        S3[Span 3: 混合 RAG 检索 (45ms)]
-        S4[Span 4: LLM 首字推流 + 生成 (850ms)]
-        S5[Span 5: ERP 工具调用 (120ms)]
+        S1["Span 1: 网关鉴权与限流 (12ms)"]
+        S2["Span 2: 前置 BERT 意图识别 (8ms)"]
+        S3["Span 3: 混合 RAG 检索 (45ms)"]
+        S4["Span 4: LLM 首字推流 + 生成 (850ms)"]
+        S5["Span 5: ERP 工具调用 (120ms)"]
     end
 
     TraceRoot --> S1 --> S2 --> S3 --> S4 --> S5
     Spans --> Collector[OpenTelemetry / Jaeger / Prometheus 监控大盘]
+
+
 </pre>
 
 <h3 id="3">3. 核心指标评估矩阵</h3>
@@ -2728,6 +2802,8 @@ if __name__ == &quot;__main__&quot;:
     end
 
     E1 --> E2 --> E3 --> E4 --> E5 --> E6
+
+
 </pre>
 
 <hr />
