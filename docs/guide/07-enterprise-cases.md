@@ -90,7 +90,7 @@ stateDiagram-v2
     SlotFilling --> QueryERP: 槽位补充完毕
     
     QueryERP --> RiskAudit: 涉及退款操作，触发风控核验
-    RiskAudit --> HumanTakeover: 触发高风险金额 (>200元) / 人工介入
+    RiskAudit --> HumanTakeover: 触发高风险金额 (超200元) / 人工介入
     RiskAudit --> AutoExecution: 满足免审核极速赔付规则
     
     AutoExecution --> SummaryAnswer: 执行退款并组织话术

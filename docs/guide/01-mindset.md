@@ -17,16 +17,14 @@
 ```mermaid
 flowchart LR
     subgraph LLM["基础大语言模型 (LLM)"]
-        A[输入: 用户文本] --> B[核心: 文本概率预测] --> C[输出: 生成文本]
+        A["输入: 用户文本"] --> B["核心: 文本概率预测"] --> C["输出: 生成文本"]
     end
 
-    subgraph Agent[AI Agent 智能体系统]
-        D[输入: 多模态感知] --> E[大脑: 规划 + 记忆 + 反思]
-        E   <-->   F[工具: 查数据库 / 调接口 / 跑代码]
-        E --> G[输出: 自主执行 + 环境状态变更]
+    subgraph Agent["AI Agent 智能体系统"]
+        D["输入: 多模态感知"] --> E["大脑: 规划 + 记忆 + 反思"]
+        E <--> F["工具: 查数据库 / 调接口 / 跑代码"]
+        E --> G["输出: 自主执行 + 环境状态变更"]
     end
-
-
 ```
 
 ### 1.2 核心定义对照表
@@ -93,20 +91,18 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    subgraph AntiPattern[❌ 反模式：巨型单步黑盒 Prompt]
-        RawInput["用户输入] --> MonolithicPrompt["3000字超级提示词\n(意图/抽取/计算/校验/输出)""]
+    subgraph AntiPattern["❌ 反模式：巨型单步黑盒 Prompt"]
+        RawInput["用户输入"] --> MonolithicPrompt["3000字超级提示词\n(意图/抽取/计算/校验/输出)"]
         MonolithicPrompt --> MonolithicOutput["不可控输出\n(高幻觉 / 难调试 / 成本高昂)"]
     end
 
-    subgraph ModularPipeline[✅ 最佳实践：模块化工作流串联]
-        InputMsg["用户输入] --> NodeA["节点 A: 意图分类\n(轻量/5ms)""]
+    subgraph ModularPipeline["✅ 最佳实践：模块化工作流串联"]
+        InputMsg["用户输入"] --> NodeA["节点 A: 意图分类\n(轻量/5ms)"]
         NodeA --> NodeB["节点 B: 实体抽取\n(槽位严格规约)"]
         NodeB --> NodeC["节点 C: 业务工具调用\n(确定性真实查库)"]
         NodeC --> NodeD["节点 D: 礼貌话术生成\n(事实接地总结)"]
-        NodeD --> SafeOutput[稳定高质交付]
+        NodeD --> SafeOutput["稳定高质交付"]
     end
-
-
 ```
 
 - **核心好处**：每个节点均可独立编写单元测试，哪个环节出错一清二楚，系统调试成本降低 90%。
@@ -120,26 +116,30 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    subgraph HostLayer[宿主应用层 Host / Client]
-        Claude[Claude Desktop]
-        Cursor[Cursor IDE]
-        CustomAgent[自研企业级 Agent 引擎]
+    subgraph HostLayer["宿主应用层 Host / Client"]
+        Claude["Claude Desktop"]
+        Cursor["Cursor IDE"]
+        CustomAgent["自研企业级 Agent 引擎"]
     end
 
     subgraph MCPProtocol["MCP 标准协议层 (JSON-RPC 2.0 / SSE / Stdio)"]
-        CoreSpec[统一上下文规约: Prompts / Resources / Tools]
+        CoreSpec["统一上下文规约: Prompts / Resources / Tools"]
     end
 
-    subgraph ServerLayer[MCP Server 工具与资源层]
-        S1[Postgres / MySQL MCP]
-        S2[GitHub / GitLab MCP]
-        S3[Slack / 飞书 MCP]
-        S4[本地文件系统与终端执行 MCP]
+    subgraph ServerLayer["MCP Server 工具与资源层"]
+        S1["Postgres / MySQL MCP"]
+        S2["GitHub / GitLab MCP"]
+        S3["Slack / 飞书 MCP"]
+        S4["本地文件系统与终端执行 MCP"]
     end
 
-    HostLayer   <-->   MCPProtocol   <-->   ServerLayer
-
-
+    CustomAgent <--> CoreSpec
+    Claude <--> CoreSpec
+    Cursor <--> CoreSpec
+    CoreSpec <--> S1
+    CoreSpec <--> S2
+    CoreSpec <--> S3
+    CoreSpec <--> S4
 ```
 
 ### 4.4 心法四：提示词是系统的业务配置代码

@@ -44,17 +44,12 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    P1["1. 用户请求报文\n{\n  'role': 'user',\n  'content': '查订单 20260901'\n}"]
-    
-    P2["2. 模型决策报文 (Assistant)\n{\n  'role': 'assistant',\n  'tool_calls': [{\n    'id': 'call_abc123',\n    'function': {'name': 'get_order', 'arguments': '{\"id\":\"20260901\"}'}\n  }]\n}"]
-    
-    P3["3. 本地工具回填报文 (Tool)\n{\n  'role': 'tool',\n  'tool_call_id': 'call_abc123',\n  'content': '{\"status\":\"运输中\",\"express\":\"顺丰\"}'\n}"]
-    
-    P4["4. 最终自然语言答复\n{\n  'role': 'assistant',\n  'content': '您的订单 20260901 正在顺丰承运中...'\n}"]
+    P1["1. 用户请求报文<br/>role: user<br/>content: 查订单 20260901"]
+    P2["2. 模型决策报文 (Assistant)<br/>role: assistant<br/>tool_calls: get_order(id='20260901')"]
+    P3["3. 本地工具回填报文 (Tool)<br/>role: tool<br/>content: status=运输中, express=顺丰"]
+    P4["4. 最终自然语言答复<br/>role: assistant<br/>content: 您的订单正在顺丰承运中..."]
 
     P1 --> P2 --> P3 --> P4
-
-
 ```
 
 ---
@@ -70,12 +65,10 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    Req["用户请求到达网关] --> Gate["网关前置: 轻量 BERT 分类器 (耗时 < 15ms)""]
+    Req["用户请求到达网关"] --> Gate["网关前置: 轻量 BERT 分类器 (耗时 &lt; 15ms)"]
     Gate --> Judge{置信度与意图分类}
     Judge -- 高频固定意图 (如: 打招呼/人工直转) --> CacheResp["直接走本地预设模板/规则回复\n(零 Token 成本 / 15ms 极速响应)"]
     Judge -- 复杂业务/多轮意图 (如: 售后查单/政策咨询) --> AgentCore["转发至大模型 Agent 核心\n(结合 Tool Calling 与 RAG 深度推理)"]
-
-
 ```
 
 - **核心收益**：**在网关层毫秒级拦截 60% 以上的无用 Token 消耗**，将企业大模型服务器资源集中留给需要复杂推理的长尾疑难问题，整体降本达 **60% 以上**。
@@ -87,20 +80,19 @@ flowchart TD
 ```mermaid
 flowchart TD
     subgraph WithoutCache["❌ 无缓存模式 (每次全量重新计算)"]
-        Sys1[系统角色 2000字] --> Compute1[全量 Attention 矩阵计算]
-        Tools1[工具说明 5000字] --> Compute1
-        History1[多轮历史 3000字] --> Compute1
-        Query1[新提问 20字] --> Compute1
-        Compute1 --> Cost1[计费: 10020 Tokens 全额付费\n首字延迟: 2500ms]
+        Sys1["系统角色 2000字"] --> Compute1["全量 Attention 矩阵计算"]
+        Tools1["工具说明 5000字"] --> Compute1
+        History1["多轮历史 3000字"] --> Compute1
+        Query1["新提问 20字"] --> Compute1
+        Compute1 --> Cost1["计费: 10020 Tokens 全额付费\n首字延迟: 2500ms"]
     end
 
-    subgraph WithPromptCache[✅ 启用 Prompt Cache 静态前缀锁定]
+    subgraph WithPromptCache["✅ 启用 Prompt Cache 静态前缀锁定"]
         Sys2["固定静态前缀: System Prompt + Tool Schemas (7000字)"] --> Hit["⚡ 命中显存已存 KV Cache (零重新计算!)"]
-        History2["动态后缀: 会话历史 + 用户新输入] --> Compute2["仅需计算动态增量 (3020字)""]
-        Hit & Compute2 --> Cost2[计费: 前缀享受 80%~90% 折扣\n首字延迟: 骤降至 600ms]
+        History2["动态后缀: 会话历史 + 用户新输入"] --> Compute2["仅需计算动态增量 (3020字)"]
+        Hit --> Cost2["计费: 前缀享受 80%~90% 折扣\n首字延迟: 骤降至 600ms"]
+        Compute2 --> Cost2
     end
-
-
 ```
 
 ---

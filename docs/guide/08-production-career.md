@@ -27,18 +27,16 @@
 
 ```mermaid
 flowchart TD
-    Req["用户请求] --> PromptCache["1. Prompt Cache 缓存优化\n(固定前缀锁定 / 降低 80% 账单)""]
-    PromptCache --> LLM[2. 大模型推理引擎]
-    LLM --> Breaker{3. Circuit Breaker 熔断检测}
+    Req["用户请求"] --> PromptCache["1. Prompt Cache 缓存优化\n(固定前缀锁定 / 降低 80% 账单)"]
+    PromptCache --> LLM["2. 大模型推理引擎"]
+    LLM --> Breaker{"3. Circuit Breaker 熔断检测"}
     
-    Breaker -- 连续重复调用 --> Block1[🚨 拦截死循环并优雅降级]
-    Breaker -- 步数超限 (>6步) --> Block2[🚨 强制终止并落盘快照]
-    Breaker -- 正常工具调用 --> Executor[4. 执行外部业务系统]
+    Breaker -->|连续重复调用| Block1["🚨 拦截死循环并优雅降级"]
+    Breaker -->|步数超限 大于6步| Block2["🚨 强制终止并落盘快照"]
+    Breaker -->|正常工具调用| Executor["4. 执行外部业务系统"]
     
-    Executor --> Eval[5. 后置安全审查与事实接地 Grounding]
-    Eval --> Out([安全交付用户])
-
-
+    Executor --> Eval["5. 后置安全审查与事实接地 Grounding"]
+    Eval --> Out(["安全交付用户"])
 ```
 
 ### 1. 幻觉产生的本质与工业级四大防御手段
@@ -60,8 +58,8 @@ flowchart TD
 stateDiagram-v2
     [*] --> Closed: 系统初始状态 (Closed 正常工作)
     
-    Closed --> Closed: 工具正常返回 / 步数 < 阈值
-    Closed --> Open: 连续 2 次相同参数死锁 OR 步数 > 6
+    Closed --> Closed: 工具正常返回 / 步数低于阈值
+    Closed --> Open: 连续 2 次相同参数死锁 OR 步数超过 6 步
     
     state Open {
         [*] --> FastFail: 拒绝继续调用大模型与外部工具
@@ -76,8 +74,6 @@ stateDiagram-v2
     
     HalfOpen --> Closed: 探测请求成功闭环
     HalfOpen --> Open: 探测请求再次异常
-
-
 ```
 
 配套独立生产级脚本 `src/08_circuit_breaker.py`，支持：
@@ -100,35 +96,33 @@ python src/08_circuit_breaker.py
 
 ```mermaid
 flowchart TD
-    subgraph Triad[Ragas 评测核心三元组]
-        Q[用户提问 Query]
-        C[检索切片 Context]
-        A[生成答复 Answer]
-        GT[真值标签 Ground Truth]
+    subgraph Triad["Ragas 评测核心三元组"]
+        Q["用户提问 Query"]
+        C["检索切片 Context"]
+        A["生成答复 Answer"]
+        GT["真值标签 Ground Truth"]
     end
 
-    C -->|衡量 Context 是否支撑 Answer| M1[Faithfulness 忠实度 / 幻觉率]
+    C -->|衡量 Context 是否支撑 Answer| M1["Faithfulness 忠实度 / 幻觉率"]
     M1 --> A
     
-    Q -->|衡量 Answer 是否切中要点| M2[Answer Relevance 答案相关性]
+    Q -->|衡量 Answer 是否切中要点| M2["Answer Relevance 答案相关性"]
     M2 --> A
     
-    GT -->|衡量 Context 是否完整覆盖真值| M3[Context Recall 上下文召回率]
+    GT -->|衡量 Context 是否完整覆盖真值| M3["Context Recall 上下文召回率"]
     M3 --> C
     
-    Q -->|衡量 Context 中有效信息密度| M4[Context Precision 上下文精准度]
+    Q -->|衡量 Context 中有效信息密度| M4["Context Precision 上下文精准度"]
     M4 --> C
-
-
 ```
 
 ### 2. 生产级全链路可观测体系 (Trace 架构)
 
 ```mermaid
 flowchart LR
-    User["终端用户] --> TraceRoot["Trace ID: tr-2026-9988\n(全链路透传追踪标识)""]
+    User["终端用户"] --> TraceRoot["Trace ID: tr-2026-9988\n(全链路透传追踪标识)"]
     
-    subgraph Spans[Span 调用树]
+    subgraph Spans["Span 调用树"]
         direction TB
         S1["Span 1: 网关鉴权与限流 (12ms)"]
         S2["Span 2: 前置 BERT 意图识别 (8ms)"]
@@ -138,9 +132,7 @@ flowchart LR
     end
     
     TraceRoot --> S1 --> S2 --> S3 --> S4 --> S5
-    Spans --> Collector[OpenTelemetry / Jaeger / Prometheus 监控大盘]
-
-
+    Spans --> Collector["OpenTelemetry / Jaeger / Prometheus 监控大盘"]
 ```
 
 ### 3. 核心指标评估矩阵
