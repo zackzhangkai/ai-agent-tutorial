@@ -54,7 +54,7 @@ flowchart TD
 ### 2.1 无状态大模型的痛点
 大语言模型本质上是**无状态（Stateless）的条件概率预测器**：
 - 如果你要求它：“查一下明天北京天气，如果下雨就帮我向主管申请取消明天上午的拜访”，普通对话模型只能凭空编造一个虚假的下雨情况，或者回答“我没有权限访问天气网”；
-- 它无法自主判断**“第一步查天气 $\rightarrow$ 第二步根据天气判断是否发邮件 $\rightarrow$ 第三步生成执行报告”**这一连续的逻辑因果链。
+- 它无法自主判断**“第一步查天气 → 第二步根据天气判断是否发邮件 → 第三步生成执行报告”**这一连续的逻辑因果链。
 
 ### 2.2 ReAct 范式的革命性价值
 ReAct 论文（Synergizing Reasoning and Acting in Language Models）提出了将**推理（Reasoning）**与**行动（Acting）**交替进行的机制：
@@ -89,10 +89,58 @@ stateDiagram-v2
 | :--- | :--- | :--- | :--- |
 | **ReAct 循环** | 单步交替思考与行动，实时根据上一步结果纠偏 | 智能客服查单、多条件查询、自动化运维排障 | 延迟适中（2~5次调用），灵活性极强 |
 | **Plan-and-Solve** | 一次性规划出全部执行步骤（Step 1~N），再按步骤依次执行 | 流程高度固定的数据迁移、自动化代码重构 | 首步思考耗时长，中途纠偏能力弱于 ReAct |
-| **Deep Research** | 大纲拆解 $\rightarrow$ 并行多路搜索抓取 $\rightarrow$ 交叉事实核查 $\rightarrow$ 深度长文综合 | 行业深度研报撰写、竞品全景调研、学术综述 | 执行轮次多（5~15轮），信息丰富度极高 |
+| **Deep Research** | 大纲拆解 → 并行多路搜索抓取 → 交叉事实核查 → 深度长文综合 | 行业深度研报撰写、竞品全景调研、学术综述 | 执行轮次多（5~15轮），信息丰富度极高 |
+
+#### Deep Research 范式多路并行执行拓扑
+
+```mermaid
+flowchart TD
+    UserQuery[用户调研诉求: '2026年具身智能商业化落地现状'] --> PlannerNode[1. 规划节点: 拆解研报大纲与核心子问题]
+    
+    subgraph ParallelSearch[2. 并行多路事实搜集与抓取 (Map 阶段)]
+        Q1[子问题 A: 核心芯片算力进展] --> Worker1[爬虫 Worker 1: 搜索抓取 10 篇研报]
+        Q2[子问题 B: 四足与双足量产出货量] --> Worker2[爬虫 Worker 2: 行业协会统计数据]
+        Q3[子问题 C: 工业制造典型标杆案例] --> Worker3[爬虫 Worker 3: 领军企业招股书与财报]
+    end
+    
+    PlannerNode --> Q1
+    PlannerNode --> Q2
+    PlannerNode --> Q3
+    
+    subgraph CrossVerification[3. 交叉事实校验与去重 (Cross-Check)]
+        JudgeNode{事实核验模型: 数据是否矛盾?}
+        Worker1 --> JudgeNode
+        Worker2 --> JudgeNode
+        Worker3 --> JudgeNode
+        JudgeNode -- 存疑数据 --> WebVerification[针对矛盾点定向二次复查]
+        WebVerification --> JudgeNode
+    end
+    
+    subgraph Synthesis[4. 最终深度报告综合 (Reduce 阶段)]
+        JudgeNode -- 置信事实列表 --> ReportGenerator[长文本综合生成器: 按大纲结构化组织]
+        ReportGenerator --> CitationCheck[自动注入原始数据引用角标 (Citations)]
+    end
+    
+    CitationCheck --> FinalReport[交付 8000 字出版级深度研究报告]
+```
 
 ### 3.2 生产级设计准则：12-Factor Agents 核心要义
+
 借鉴现代微服务 12-Factor 哲学，工业级 Agent 必须遵守以下原则：
+
+```mermaid
+flowchart LR
+    subgraph Principles[12-Factor Agents 四大支柱规约]
+        direction TB
+        F1[Factor 1: 显式状态持久化\n禁止内存变量存Session / 拥抱 Redis]
+        F2[Factor 2: 工具接口幂等\n无副作用 / 统一输入输出 DTO Schema]
+        F3[Factor 3: 严格熔断防死循环\n设置硬性 Max Iterations 与退避机制]
+        F4[Factor 4: 全链路分布式追踪\nOpenTelemetry Trace 记录每一步 Thought]
+    end
+
+    Principles --> ProductionReady[生产可用 / 高并发 / 可审计 / 零级事故]
+```
+
 1. **显式状态管理**：会话状态不保存在本地内存变量中，必须持久化在 Redis 或 PostgreSQL 状态机；
 2. **工具无状态化**：每个 Tool 接口必须幂等，入参自包含，不产生未受控的副作用；
 3. **强制循环熔断**：必须为每一个 Agent 会话设置 `max_steps`（最大步数限制，建议 5~8 次），严禁无休止死循环；

@@ -55,14 +55,64 @@ flowchart TD
 2. **缺乏严格上下文交叉比对**：
    - 向量模型只计算 Query 与 Document 各自向量的夹角，没有让 Query 和 Document 的每一个 Token 在多头注意力机制中进行深度的交叉打分。
 
+```mermaid
+flowchart TD
+    subgraph BiEncoder[Bi-Encoder 双塔架构 (用于初步粗排召回)]
+        direction LR
+        Q1[用户 Query] --> Tower1[Embedding 模型 A] --> V1[向量 Q]
+        D1[知识切片 Doc] --> Tower2[Embedding 模型 B] --> V2[向量 D]
+        V1 & V2 --> Cosine[余弦相似度计算: cos_sim(Q, D)\n速度极快 / 丢失深度交互]
+    end
+
+    subgraph CrossEncoder[Cross-Encoder 交叉重排架构 (用于高精细排)]
+        direction LR
+        Concat["拼接输入: [CLS] Query [SEP] Document [SEP]"] --> Transformer[深度多层 Transformer 全注意力计算]
+        Transformer --> Score["精准相关度打分: 0.0 ~ 1.0\n算力消耗大 / 极其精确"]
+    end
+
+    BiEncoder -->|初筛 Top 50 候选| CrossEncoder --> FinalTop["输出最终 Top 3~5 事实切片"]
+```
+
 ### 2.2 工业级三级流水线的核心突破
 - **BM25 稀疏检索**：负责“抓精准”。哪怕这个生僻型号只出现了一次，BM25 也能依靠词频精准命中；
 - **密集向量检索**：负责“抓泛化”。用户说“退换”，文档写“售后”，向量模型能够轻松建立语义连接；
 - **BGE-Reranker 重排序**：作为终审裁判，利用 Cross-Encoder 架构对前两路召回的前 50 个候选切片进行细致打分，剔除无关噪点，只留 Top 3~5 精华切片。
 
+```mermaid
+flowchart LR
+    subgraph DualInput[双路检索结果输入]
+        BM25_List["BM25 检索排名\n#1 Doc_B\n#2 Doc_A\n#3 Doc_C"]
+        Dense_List["Dense 向量检索排名\n#1 Doc_A\n#2 Doc_D\n#3 Doc_B"]
+    end
+
+    subgraph RRF_Engine[RRF 倒数排名融合算法]
+        Formula["RRF 得分公式:\nscore(d) = Σ 1 / (60 + rank(d))"]
+    end
+
+    subgraph FusedOutput[融合排序输出]
+        Result["综合排名 (兼顾精确词频与泛化语义):\n🔥 #1 Doc_B (高分)\n🔥 #2 Doc_A (高分)\n#3 Doc_D\n#4 Doc_C"]
+    end
+
+    DualInput --> RRF_Engine --> FusedOutput
+```
+
 ---
 
 ## 三、 应用场景与能力矩阵：工业级 RAG 参数配置标准
+
+### 3.1 工业级文档分块 (Chunking) 四大策略对比
+
+```mermaid
+flowchart TD
+    Raw[企业复杂长篇原始文档] --> SplitMethod{选择切分策略}
+    
+    SplitMethod -- 1. 固定字符分块 --> FixChunk[简单暴力截断\n可能在句子中间一刀两断 / 不推荐]
+    SplitMethod -- 2. 递归语法树分块 --> RecurChunk[依据段落回车、句号分级切分\n保留完整句子语义 / 工业界主流]
+    SplitMethod -- 3. Parent-Child 父子分块 --> PCChunk[大块存上下文(2000字)，小块建向量索引(200字)\n命中后将父文档注入 LLM / 最佳实践]
+    SplitMethod -- 4. 语义感知分块 --> SemChunk[利用 Embedding 变化剧烈度自动检测断点\n计算开销较高]
+```
+
+### 3.2 生产级配置参数基准表
 
 | 环节配置 | 生产推荐指标 | 技术原理与选型依据 | 避坑提醒 |
 | :--- | :--- | :--- | :--- |

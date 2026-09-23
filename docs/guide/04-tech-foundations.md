@@ -38,6 +38,21 @@ sequenceDiagram
     App-->>User: 渲染最终答复
 ```
 
+#### Tool Calling 四阶段报文数据结构标准
+
+```mermaid
+flowchart LR
+    P1["1. 用户请求报文\n{\n  'role': 'user',\n  'content': '查订单 20260901'\n}"]
+    
+    P2["2. 模型决策报文 (Assistant)\n{\n  'role': 'assistant',\n  'tool_calls': [{\n    'id': 'call_abc123',\n    'function': {'name': 'get_order', 'arguments': '{\"id\":\"20260901\"}'}\n  }]\n}"]
+    
+    P3["3. 本地工具回填报文 (Tool)\n{\n  'role': 'tool',\n  'tool_call_id': 'call_abc123',\n  'content': '{\"status\":\"运输中\",\"express\":\"顺丰\"}'\n}"]
+    
+    P4["4. 最终自然语言答复\n{\n  'role': 'assistant',\n  'content': '您的订单 20260901 正在顺丰承运中...'\n}"]
+
+    P1 --> P2 --> P3 --> P4
+```
+
 ---
 
 ## 二、 业务痛点与技术价值：为什么需要双轨制分流与微调？
@@ -48,6 +63,7 @@ sequenceDiagram
 - 如果每一条请求都直接唤醒 70B 参数的大模型并全量传入上万 Tokens 的工具 Schema，单次请求耗时高达 1.5~3 秒，单日 Token 消耗费用极其惊人。
 
 ### 2.2 解决方案：网关层双轨制（Dual-Track Routing）
+
 ```mermaid
 flowchart TD
     Req[用户请求到达网关] --> Gate[网关前置: 轻量 BERT 分类器 (耗时 < 15ms)]
@@ -55,11 +71,52 @@ flowchart TD
     Judge -- 高频固定意图 (如: 打招呼/人工直转) --> CacheResp[直接走本地预设模板/规则回复\n(零 Token 成本 / 15ms 极速响应)]
     Judge -- 复杂业务/多轮意图 (如: 售后查单/政策咨询) --> AgentCore[转发至大模型 Agent 核心\n(结合 Tool Calling 与 RAG 深度推理)]
 ```
+
 - **核心收益**：**在网关层毫秒级拦截 60% 以上的无用 Token 消耗**，将企业大模型服务器资源集中留给需要复杂推理的长尾疑难问题，整体降本达 **60% 以上**。
+
+### 2.3 Prompt Cache 底层原理与 KV 显存复用
+
+大模型在处理请求时，需要对上下文计算 Key-Value (KV) 向量并载入显存。如果前缀完全相同，服务商（如 OpenAI、DeepSeek、Claude）可以直接复用已经计算好的 KV Cache：
+
+```mermaid
+flowchart TD
+    subgraph WithoutCache[❌ 无缓存模式 (每次全量重新计算)]
+        Sys1[系统角色 2000字] --> Compute1[全量 Attention 矩阵计算]
+        Tools1[工具说明 5000字] --> Compute1
+        History1[多轮历史 3000字] --> Compute1
+        Query1[新提问 20字] --> Compute1
+        Compute1 --> Cost1[计费: 10020 Tokens 全额付费\n首字延迟: 2500ms]
+    end
+
+    subgraph WithPromptCache[✅ 启用 Prompt Cache 静态前缀锁定]
+        Sys2[固定静态前缀: System Prompt + Tool Schemas (7000字)] --> Hit[⚡ 命中显存已存 KV Cache (零重新计算!)]
+        History2[动态后缀: 会话历史 + 用户新输入] --> Compute2[仅需计算动态增量 (3020字)]
+        Hit & Compute2 --> Cost2[计费: 前缀享受 80%~90% 折扣\n首字延迟: 骤降至 600ms]
+    end
+```
 
 ---
 
-## 三、 应用场景与能力矩阵：Tool Calling 能做什么？
+## 三、 应用场景与能力矩阵：Tool Calling 与技术选型决策
+
+### 3.1 微调 (Fine-Tuning) vs RAG vs Prompt vs Tool Calling 选型决策矩阵
+
+```mermaid
+quadrantChart
+    title 大模型企业级技术选型象限图
+    x-axis "低实时动态性 (通用/静态规则)" --> "高实时动态性 (实时库存/用户数据)"
+    y-axis "结构灵活性 (自由自然语言)" --> "格式严格性 (严苛代码/专用指令格式)"
+    quadrant-1 "Tool Calling (工具调用)"
+    quadrant-2 "模型微调 (Fine-Tuning)"
+    quadrant-3 "纯 Prompt Engineering"
+    quadrant-4 "检索增强 (RAG 知识库)"
+    "天气查询 / 微信退款 / 数据库读写": [0.85, 0.82]
+    "企业当季售后退货时效政策": [0.80, 0.35]
+    "特定医疗病历结构化输出格式": [0.25, 0.88]
+    "通用邮件客套话 / 翻译 / 润色": [0.20, 0.20]
+```
+
+### 3.2 典型工业级工具类型矩阵表
 
 | 工具类型 | 典型调用场景 | 工具入参 (Parameters) | 预期产出与业务影响 |
 | :--- | :--- | :--- | :--- |

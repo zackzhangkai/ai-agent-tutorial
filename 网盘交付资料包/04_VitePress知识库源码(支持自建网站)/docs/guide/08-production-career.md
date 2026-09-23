@@ -53,6 +53,29 @@ flowchart TD
 - **Prompt Cache**：锁定 System Prompt 和 Tool Schemas 为静态前缀，命中服务商缓存机制，降低 50%~80% 的推理成本并提升首字响应速度 40%。
 
 ### 3. 防死循环熔断器（Circuit Breaker）实操
+
+```mermaid
+stateDiagram-v2
+    [*] --> Closed: 系统初始状态 (Closed 正常工作)
+    
+    Closed --> Closed: 工具正常返回 / 步数 < 阈值
+    Closed --> Open: 连续 2 次相同参数死锁 OR 步数 > 6
+    
+    state Open {
+        [*] --> FastFail: 拒绝继续调用大模型与外部工具
+        FastFail --> TriggerDegradation: 触发降级模板 / 无缝转人工
+    }
+    
+    Open --> HalfOpen: 冷却窗口期满 (如等待 60s)
+    
+    state HalfOpen {
+        [*] --> CanaryTest: 放行单条探测请求
+    }
+    
+    HalfOpen --> Closed: 探测请求成功闭环
+    HalfOpen --> Open: 探测请求再次异常
+```
+
 配套独立生产级脚本 `src/08_circuit_breaker.py`，支持：
 - 连续重复相同调用熔断；
 - 全局最大步数超限熔断；
@@ -69,7 +92,50 @@ python src/08_circuit_breaker.py
 
 面试官极爱追问：“你如何证明你的 Agent 优化有效？”必须从**离线评测（Offline）**与**在线监控（Online）**双轮驱动来回答。
 
-### 核心指标评估矩阵
+### 1. 业界公认 Ragas 评测三元组指标原理
+
+```mermaid
+flowchart TD
+    subgraph Triad[Ragas 评测核心三元组]
+        Q[用户提问 Query]
+        C[检索切片 Context]
+        A[生成答复 Answer]
+        GT[真值标签 Ground Truth]
+    end
+
+    C -->|衡量 Context 是否支撑 Answer| M1[Faithfulness 忠实度 / 幻觉率]
+    M1 --> A
+    
+    Q -->|衡量 Answer 是否切中要点| M2[Answer Relevance 答案相关性]
+    M2 --> A
+    
+    GT -->|衡量 Context 是否完整覆盖真值| M3[Context Recall 上下文召回率]
+    M3 --> C
+    
+    Q -->|衡量 Context 中有效信息密度| M4[Context Precision 上下文精准度]
+    M4 --> C
+```
+
+### 2. 生产级全链路可观测体系 (Trace 架构)
+
+```mermaid
+flowchart LR
+    User[终端用户] --> TraceRoot[Trace ID: tr-2026-9988\n(全链路透传追踪标识)]
+    
+    subgraph Spans[Span 调用树]
+        direction TB
+        S1[Span 1: 网关鉴权与限流 (12ms)]
+        S2[Span 2: 前置 BERT 意图识别 (8ms)]
+        S3[Span 3: 混合 RAG 检索 (45ms)]
+        S4[Span 4: LLM 首字推流 + 生成 (850ms)]
+        S5[Span 5: ERP 工具调用 (120ms)]
+    end
+    
+    TraceRoot --> S1 --> S2 --> S3 --> S4 --> S5
+    Spans --> Collector[OpenTelemetry / Jaeger / Prometheus 监控大盘]
+```
+
+### 3. 核心指标评估矩阵
 
 | 评估维度 | 核心指标 | 计算方法与业务意义 |
 | :--- | :--- | :--- |
@@ -79,7 +145,7 @@ python src/08_circuit_breaker.py
 | **成本与时延** | P99 端到端耗时与单会话平均 Token 消耗 | 系统是否卡顿？单位商业价值的 Token 成本是否可控？ |
 | **稳定性** | 熔断触发率与无感转人工兜底率 | 异常流量与死循环是否被优雅接管？ |
 
-### 业界主流自动化评测工具链
+### 4. 业界主流自动化评测工具链
 1. **Ragas**：专注于 RAG 管道评估，涵盖**忠实度（Faithfulness）**、**答案相关性（Answer Relevance）**与**上下文召回率（Context Recall）**；
 2. **TruLens**：评估 Agent 的工具调用准确率与 RAG 三元组（Triad）；
 3. **LangSmith / Phoenix**：提供端到端分布式链路 Trace，追踪每一轮 LLM 调用的 Prompt、Token 消耗与节点耗时。

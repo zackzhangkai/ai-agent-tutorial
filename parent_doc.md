@@ -17,7 +17,7 @@
   - 14 步逐级拆解：Python 核心、FastAPI 服务化、Transformer、Prompt Cache、RAG、Tool Calling、LangGraph、Eino、Agent Harness、项目与求职
 
 - 🧠 [第三章：架构与核心理论篇 —— 经典 Agent 决策运行体系](https://my.feishu.cn/wiki/UW0SwiXssiJzN1kdVu6cwxginEe)
-  - 3.1 经典决策三元组：感知 (Perception) $\rightarrow$ 规划 (Planning) $\rightarrow$ 行动 (Action)
+  - 3.1 经典决策三元组：感知 (Perception) → 规划 (Planning) → 行动 (Action)
   - 3.2 典型工业探索：以手淘/电商智能助手为例
   - 3.3 主流规划算法机制（ReAct 思考循环、Deep Research 深度搜索）
   - 3.4 12-Factor Agents 设计原则与生产准则

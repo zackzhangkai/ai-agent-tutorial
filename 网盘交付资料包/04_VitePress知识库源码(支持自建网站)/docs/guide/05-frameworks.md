@@ -30,7 +30,7 @@ flowchart TD
 
 ### 手把手配置电商客服 Agent 实操步骤（对应 5.jpeg）
 1. **第一步：创建知识库**
-   - 进入 Dify 控制台，点击顶部【知识库】 $\rightarrow$ 【创建知识库】。
+   - 进入 Dify 控制台，点击顶部【知识库】 → 【创建知识库】。
    - 上传企业售后政策与常见问题文档（支持 txt、markdown、pdf、docx）。
    - **分段与清洗设置**：选择“自动”或“通用分块”，分块长度建议 500~800 字符。
    - **索引方式**：务必勾选【高质量】（调用外部 Embedding 模型），推荐选用 `text-embedding-3-small` 或 `text-embedding-v2`。

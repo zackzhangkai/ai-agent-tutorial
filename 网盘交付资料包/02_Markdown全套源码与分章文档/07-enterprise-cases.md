@@ -75,6 +75,28 @@ flowchart TD
 
 ### 业务难点与生产级应对策略对照表
 
+```mermaid
+stateDiagram-v2
+    [*] --> Idle: 监听用户消息
+    Idle --> IntentClassified: 触发意图识别 (BERT/LLM)
+    
+    IntentClassified --> SlotFilling: 关键槽位缺失 (如缺少订单号)
+    SlotFilling --> AwaitingUserInput: 反问用户提供补充信息
+    AwaitingUserInput --> SlotFilling: 用户提供订单号
+    
+    IntentClassified --> QueryERP: 槽位齐全，调用 ERP 查单
+    SlotFilling --> QueryERP: 槽位补充完毕
+    
+    QueryERP --> RiskAudit: 涉及退款操作，触发风控核验
+    RiskAudit --> HumanTakeover: 触发高风险金额 (>200元) / 人工介入
+    RiskAudit --> AutoExecution: 满足免审核极速赔付规则
+    
+    AutoExecution --> SummaryAnswer: 执行退款并组织话术
+    HumanTakeover --> SummaryAnswer: 人工坐席批复完成
+    
+    SummaryAnswer --> [*]
+```
+
 | 核心挑战 | 业务痛点描述 | 生产级解决方案 |
 | :--- | :--- | :--- |
 | **意图漂移与口语化** | 口语化简写、错别字、情绪化发泄 | BERT 前置轻量分类（过滤 60% 基础意图） + 大模型 CoT 兜底 |
@@ -88,6 +110,27 @@ flowchart TD
 ## 7.3 案例二：基于 Dify 的电商客服智能体搭建实战
 
 对于中小电商商家，无需组建昂贵的算法团队，基于 Dify 可在 1 天内搭建具备高质量知识检索和订单查询能力的金牌客服助手。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as 淘宝/抖音买家
+    participant DifyApp as Dify Chatflow 应用
+    participant VectorDB as 企业知识库 (RAG)
+    participant ERP as 聚水潭/万里牛 ERP
+    participant Finance as 财务审批工作台
+
+    Customer->>DifyApp: "昨天买的草莓烂了一半，怎么退钱？"
+    DifyApp->>VectorDB: 混合检索《生鲜冷链破损赔付标准》
+    VectorDB-->>DifyApp: 召回规则: 24h内拍照凭证可全额极速退款
+    DifyApp->>Customer: 话术安抚并引导上传坏果照片
+    Customer->>DifyApp: 上传实物照片与快递面单
+    DifyApp->>ERP: 调用接口查询订单支付金额与签收时效
+    ERP-->>DifyApp: 订单实付 68 元，签收仅 4 小时，符合理赔条件
+    DifyApp->>Finance: 自动创建极速退款工单流水
+    Finance-->>DifyApp: 原路退款成功通知
+    DifyApp-->>Customer: "亲亲，已为您极速办理 68 元退款，款项将在 2 小时内原路到账！"
+```
 
 ### 1. 知识库准备与向量分段规范
 - **准备三份核心 Markdown 文档**：

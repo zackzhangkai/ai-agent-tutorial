@@ -31,7 +31,7 @@
 ### 6.1.3 【能做什么（What）】
 利用成熟的编排框架，企业可以构建出高稳定、可观测的复杂自动化业务流：
 - **电商多技能客服中心**：自动识别用户意图，流转至售前导购、物流查询或售后退款分支。
-- **自动化代码研发助手**：生成代码 $\rightarrow$ 静态检查 $\rightarrow$ 单元测试 $\rightarrow$ 失败自动反馈 LLM 修复 $\rightarrow$ 成功后提 PR。
+- **自动化代码研发助手**：生成代码 → 静态检查 → 单元测试 → 失败自动反馈 LLM 修复 → 成功后提 PR。
 - **金融风控与投资研报生成**：多智能体协作（收集宏观数据、财报解析、舆情监控），汇总后由主审 Agent 交叉校验。
 
 ---
@@ -59,8 +59,24 @@ flowchart TD
 ```
 
 ### 6.2.1 手把手搭建电商客服 Agent 实操步骤
+
+```mermaid
+flowchart LR
+    StartNode([用户开始对话]) --> FilterNode[敏感词与反作弊节点]
+    FilterNode --> ClassifierNode{Dify 意图分类器节点}
+    
+    ClassifierNode -- 售后政策咨询 --> KBNode[知识库检索节点\n(混合检索 + BGE Rerank)]
+    ClassifierNode -- 物流订单查询 --> ToolNode[自定义 HTTP 工具节点\n(调用外部 ERP 查询)]
+    ClassifierNode -- 闲聊与打招呼 --> DirectNode[LLM 快速问答节点]
+    
+    KBNode --> FormatNode[LLM 组装综合节点\n(注入语气约束与规范)]
+    ToolNode --> FormatNode
+    DirectNode --> EndNode([输出渲染卡片 / 微信终端])
+    FormatNode --> EndNode
+```
+
 1. **第一步：创建企业级知识库**
-   - 进入 Dify 控制台，点击顶部【知识库】 $\rightarrow$ 【创建知识库】。
+   - 进入 Dify 控制台，点击顶部【知识库】 → 【创建知识库】。
    - 上传企业售后政策与常见问题文档（支持 txt、markdown、pdf、docx）。
    - **分段与清洗设置**：选择“自动”或“通用分块”，分块长度建议 500~800 字符。
    - **索引方式**：务必勾选【高质量】（调用外部 Embedding 模型），推荐选用 `text-embedding-3-small` 或 `bge-large-zh-v1.5`。
@@ -91,6 +107,20 @@ flowchart TD
 ```
 
 ### 6.3.1 核心架构三要素
+
+```mermaid
+flowchart LR
+    subgraph Checkpointer[LangGraph Checkpointer 会话持久化与时间旅行]
+        direction TB
+        State0[Step 0 初始状态快照] --> State1[Step 1 决策快照]
+        State1 --> State2[Step 2 工具调用前快照]
+        State2 --> State3[Step 3 异常发生 / 人工挂起]
+        State3 -.->|Time Travel 支持任意回滚| State1
+    end
+    
+    Checkpointer --> Redis[(Postgres / Redis 持久化存储)]
+```
+
 1. **State（全局状态载荷）**：整个图流转时共享的数据模型。LangGraph 使用类型注解（如 `Annotated[list, operator.add]`）指定 Reducer，实现消息的自动增量合并。
 2. **Nodes（节点）**：普通的 Python 函数或可调用对象，入参为当前 `State`，返回值是一个字典，用来更新 `State`。
 3. **Edges（边与条件边）**：
@@ -177,6 +207,23 @@ classDiagram
 - **Trigger Prompt 范式**：通过结构化的系统提示词强制模型输出当前思考（Thoughts）、推理（Reasoning）、行动计划（Plan）与命令（Command）。
 
 ### 2. BabyAGI：任务驱动的自驱循环
+
+```mermaid
+flowchart TD
+    TaskQueue[(待办任务优先级队列 Task List)]
+    
+    subgraph ExecutionLoop[BabyAGI 三 Agent 自主协同循环]
+        Agent1[1. Execution Agent\n取出队列顶部首个任务并调用 LLM 执行]
+        Agent2[2. Task Creation Agent\n基于执行结果与终极目标，分析衍生新子任务]
+        Agent3[3. Prioritization Agent\n对扩充后的任务队列重新评估优先级并重排]
+    end
+
+    TaskQueue -->|弹出最高优先级任务| Agent1
+    Agent1 -->|传递执行上下文| Agent2
+    Agent2 -->|注入新任务候选集| Agent3
+    Agent3 -->|写回重新排序的待办列表| TaskQueue
+```
+
 - **三大核心协同 Agent**：
   1. **Execution Agent（执行 Agent）**：负责完成当前待办队列顶部的具体子任务；
   2. **Task Creation Agent（任务创建 Agent）**：根据已执行任务的结果和总目标，思考是否需要动态生成新任务；

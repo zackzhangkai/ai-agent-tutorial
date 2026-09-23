@@ -447,7 +447,7 @@ hr {
 - 你问他唐诗宋词、量子力学，他能引经据典、出口成章；
 - 但如果你跟他说：“帮我查一下今天下午上海飞北京的最便宜航班，如果有合适的就直接帮我订一张，并且给我的项目经理发封请假邮件”，这位学者只能两手一摊：“抱歉，我不能联网，我没有操作手机或电脑的双手，我也不能替你花钱买票。”</p>
 <p>而 <strong>AI Agent（智能体）</strong> 则是给这位学者配备了<strong>“眼睛（感知能力）、双手（工具调用能力）、笔记本（长期与短期记忆）以及行动规划逻辑（决策系统）”</strong>的<strong>“全能数字员工”</strong>：
-- 他会自己先思考拆解：“我要先调用携程或航旅纵横的 API 查询航班 $\rightarrow$ 找出价格最低的一班 $\rightarrow$ 弹出确认框询问你是否同意支付 $\rightarrow$ 支付完成后自动调用企业微信或邮件接口发送假条通知”。</p>
+- 他会自己先思考拆解：“我要先调用携程或航旅纵横的 API 查询航班 → 找出价格最低的一班 → 弹出确认框询问你是否同意支付 → 支付完成后自动调用企业微信或邮件接口发送假条通知”。</p>
 <pre class="mermaid">flowchart LR
     subgraph LLM[基础大语言模型 (LLM)]
         A[输入: 用户文本] --> B[核心: 文本概率预测] --> C[输出: 生成文本]
@@ -543,13 +543,13 @@ hr {
 <tr>
 <td style="text-align: left;"><strong>深度市场研报与调研</strong></td>
 <td style="text-align: left;">分析师每天耗费 3~4 小时搜集整理竞品动态与行业资讯</td>
-<td style="text-align: left;">Deep Research 范式：大纲规划 $\rightarrow$ 搜索抓取 $\rightarrow$ 交叉事实校验 $\rightarrow$ 报告生成</td>
+<td style="text-align: left;">Deep Research 范式：大纲规划 → 搜索抓取 → 交叉事实校验 → 报告生成</td>
 <td style="text-align: left;">原需 4 小时的初稿搜集工作压缩至 <strong>10 分钟</strong> 内自主完成</td>
 </tr>
 <tr>
 <td style="text-align: left;"><strong>AI 辅助编程与代码 Review</strong></td>
 <td style="text-align: left;">业务边界校验繁重，单元测试覆盖率低，人工评审耗时</td>
-<td style="text-align: left;">Cursor / Claude 智能体：读取代码树 $\rightarrow$ 自动化执行测试 $\rightarrow$ 定向纠错</td>
+<td style="text-align: left;">Cursor / Claude 智能体：读取代码树 → 自动化执行测试 → 定向纠错</td>
 <td style="text-align: left;">代码 Review 效率提升 <strong>40%</strong>，边缘异常分支测试覆盖率翻倍</td>
 </tr>
 </tbody>
@@ -572,12 +572,25 @@ hr {
 <h3 id="42">4.2 心法二：任务流程化整为零（从单节点打磨到工作流串联）</h3>
 <ul>
 <li><strong>反模式</strong>：写一个包含 20 条约束的巨型 Prompt：“你既要分析客户语气，又要提取订单号，还要计算运费，最后用表格输出”。</li>
-<li><strong>工程解法</strong>：</li>
-<li><strong>节点 A（意图分类器）</strong>：仅负责判断用户是咨询政策、查询订单还是投诉；</li>
-<li><strong>节点 B（槽位提取器）</strong>：仅负责从文本中精准抽取出手机号或订单编号；</li>
-<li><strong>节点 C（工具执行器）</strong>：仅负责发起 HTTP 请求查询真实物流；</li>
-<li><strong>节点 D（自然语言生成器）</strong>：根据节点 C 的结果组织礼貌话术。</li>
-<li><strong>核心好处</strong>：每个节点均可独立写单元测试，哪个环节出错一清二楚，调试成本降低 90%。</li>
+<li><strong>工程解法</strong>：将复杂的单步大模型推理拆解为相互解耦的管道流。</li>
+</ul>
+<pre class="mermaid">flowchart LR
+    subgraph AntiPattern[❌ 反模式：巨型单步黑盒 Prompt]
+        RawInput[用户输入] --> MonolithicPrompt[3000字超级提示词\n(意图/抽取/计算/校验/输出)]
+        MonolithicPrompt --> MonolithicOutput[不可控输出\n(高幻觉 / 难调试 / 成本高昂)]
+    end
+
+    subgraph ModularPipeline[✅ 最佳实践：模块化工作流串联]
+        InputMsg[用户输入] --> NodeA[节点 A: 意图分类\n(轻量/5ms)]
+        NodeA --> NodeB[节点 B: 实体抽取\n(槽位严格规约)]
+        NodeB --> NodeC[节点 C: 业务工具调用\n(确定性真实查库)]
+        NodeC --> NodeD[节点 D: 礼貌话术生成\n(事实接地总结)]
+        NodeD --> SafeOutput[稳定高质交付]
+    end
+</pre>
+
+<ul>
+<li><strong>核心好处</strong>：每个节点均可独立编写单元测试，哪个环节出错一清二楚，系统调试成本降低 90%。</li>
 </ul>
 <h3 id="43">4.3 心法三：善用平台工具与标准协议</h3>
 <ul>
@@ -586,6 +599,27 @@ hr {
 <li>跨系统工具接入阶段，拥抱 <strong>Anthropic MCP（Model Context Protocol）</strong> 协议，一次编写，多端复用；</li>
 <li>核心业务生产阶段，使用 <strong>LangGraph</strong> 或字节开源的 <strong>Eino</strong> 进行强类型代码级控制。</li>
 </ul>
+<pre class="mermaid">flowchart TD
+    subgraph HostLayer[宿主应用层 Host / Client]
+        Claude[Claude Desktop]
+        Cursor[Cursor IDE]
+        CustomAgent[自研企业级 Agent 引擎]
+    end
+
+    subgraph MCPProtocol[MCP 标准协议层 (JSON-RPC 2.0 / SSE / Stdio)]
+        CoreSpec[统一上下文规约: Prompts / Resources / Tools]
+    end
+
+    subgraph ServerLayer[MCP Server 工具与资源层]
+        S1[Postgres / MySQL MCP]
+        S2[GitHub / GitLab MCP]
+        S3[Slack / 飞书 MCP]
+        S4[本地文件系统与终端执行 MCP]
+    end
+
+    HostLayer <--> MCPProtocol <--> ServerLayer
+</pre>
+
 <h3 id="44">4.4 心法四：提示词是系统的业务配置代码</h3>
 <p>提示词（Prompt）绝不是随性写就的“小作文”，而是工业级 Agent 的业务配置规约。一个生产级 Prompt 必须包含四大核心骨架：
 1. <strong>Role &amp; Identity</strong>（角色与专业权威定义）
@@ -597,6 +631,14 @@ hr {
 - 例如：写一个“每日 GitHub 提交自动生成周报的 Agent”；
 - 或者：“本地 Markdown 读书笔记精准检索问答 Agent”。
 当工具在现实中真正为你节省了 30 分钟时间，你所获得的确定性正反馈将驱动你快速突破后续的复杂架构。</p>
+<pre class="mermaid">flowchart LR
+    Pain[1. 识别身边真实痛点\n(如每日写周报/查物流)] --> MVP[2. 极简 MVP 脚本验证\n(1个Prompt + 1个接口)]
+    MVP --> SaveTime[3. 获得确定性正反馈\n(真实节省30分钟)]
+    SaveTime --> Iterate[4. 引入状态机与容错\n(升级为健壮系统)]
+    Iterate --> Commercial[5. 拓展为商业交付项目\n(打造高壁垒作品集)]
+    Commercial --> Pain
+</pre>
+
 <hr />
 <h2 id="troubleshooting-faq">五、 生产避坑与常见误区（Troubleshooting FAQ）</h2>
 <h3 id="q1-agent">Q1：为什么我的 Agent 经常在中间某一步“自由发挥”，完全不理会我在提示词里的规则？</h3>
@@ -666,8 +708,49 @@ hr {
 - <strong>成本与延迟失控</strong>：多轮会话没有做 Prompt Cache 和滑动窗口压缩，用户聊 10 轮账单翻数倍；
 - <strong>线上不可控崩溃</strong>：外部工具调用返回 500 时，整个智能体陷入死循环重试直接打崩服务器。</p>
 <p>这 14 步全景体系正是为了<strong>补齐生产工程闭环中的每一个脆弱节点</strong>，让每一位学习者具备承接企业商业级项目的底气。</p>
+<pre class="mermaid">timeline
+    title 现代企业级 AI 软件应用架构演进史
+    2020 - 2022 : 传统微调阶段 : 收集海量标注语料 : 训练专用 BERT/RoBERTa 分类器 : 规则系统维护成本极高
+    2023 早期 : 纯 Prompt 对话阶段 : 尝试在单步 Prompt 中堆砌长规则 : 频繁遭遇注意力迷失与幻觉
+    2023 - 2024 : RAG 知识检索时代 : 引入向量数据库与知识切片 : 静态文本问答体验提升 : 缺乏真实业务执行能力
+    2025 - 2026 : Autonomous Agent 时代 : 状态图有向编排 (LangGraph) : 混合检索 + Tool Calling 闭环 : 防死循环熔断与人机在环
+</pre>
+
 <hr />
 <h2 id="14_1">三、 应用场景与能力矩阵：14 步逐级拆解与验收标准</h2>
+<p>全栈 Agent 工程师需要掌握从底层基础设施到顶层用户交互的四维分层体系：</p>
+<pre class="mermaid">flowchart TB
+    subgraph L4[顶层: 交互与体验层 (User Experience)]
+        direction LR
+        UI1[SSE 打字机流式推流]
+        UI2[思维链动态展开]
+        UI3[交互式卡片与富文本确认]
+    end
+
+    subgraph L3[核心: 大脑与规划层 (Reasoning & Brain)]
+        direction LR
+        B1[ReAct 推理反思引擎]
+        B2[LangGraph 状态图与条件边]
+        B3[动态路由与防死循环熔断]
+    end
+
+    subgraph L2[桥梁: 记忆与知识层 (Memory & Knowledge)]
+        direction LR
+        M1[短期 Redis 对话状态维持]
+        M2[长期向量数据库检索]
+        M3[BGE 交叉注意力二次重排]
+    end
+
+    subgraph L1[底座: 基础设施与工具层 (Tools & Infrastructure)]
+        direction LR
+        T1[OpenAI Function Calling 协议]
+        T2[企业 ERP / 外部 OpenAPI]
+        T3[Astral uv 高效包管理]
+    end
+
+    L4 <--> L3 <--> L2 <--> L1
+</pre>
+
 <table>
 <thead>
 <tr>
@@ -784,6 +867,32 @@ uv add fastapi &quot;uvicorn[standard]&quot; pydantic httpx openai python-dotenv
 <hr />
 <h3 id="42-fastapi-sse">4.2 生产级 FastAPI SSE 流式打字机服务实现</h3>
 <p>用户使用 Agent 时，单次思考和调用工具往往需要 2~5 秒。如果采用传统阻塞响应，用户只能对着白屏等待，体验极差。<strong>必须使用 Server-Sent Events（SSE）提供打字机流式回显</strong>。</p>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor Client as 前端终端 (Web / App)
+    participant Gateway as FastAPI 网关层
+    participant AgentCore as Agent 推理核心
+    participant ERP as 外部企业业务系统
+
+    Client->>Gateway: POST /api/chat/stream (SSE 请求)
+    Gateway-->>Client: HTTP 200 OK (Content-Type: text/event-stream)
+
+    Gateway->>AgentCore: 启动异步事件生成器 generator
+    AgentCore-->>Gateway: yield event: thought (解析意图)
+    Gateway-->>Client: data: {"type": "thought", "msg": "正在分析意图..."}\n\n
+
+    AgentCore->>ERP: 发起真实业务查询 (查订单/查物流)
+    AgentCore-->>Gateway: yield event: tool_call (工具调用中)
+    Gateway-->>Client: data: {"type": "tool_call", "tool": "query_order"}\n\n
+
+    ERP-->>AgentCore: 返回真实业务数据 (已发货/运单号)
+    AgentCore-->>Gateway: yield event: message_chunk (逐字打字机推流)
+    Gateway-->>Client: data: {"type": "text", "delta": "尊敬的客户，您的订单..."}\n\n
+
+    AgentCore-->>Gateway: yield event: done (传输完毕信号)
+    Gateway-->>Client: data: [DONE]\n\n
+</pre>
+
 <p>在项目根目录下创建 <code>src/01_fastapi_sse_stream.py</code> 文件：</p>
 <pre><code class="language-python">&quot;&quot;&quot;
 文件名：src/01_fastapi_sse_stream.py
@@ -977,7 +1086,7 @@ uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
 <h3 id="21">2.1 无状态大模型的痛点</h3>
 <p>大语言模型本质上是<strong>无状态（Stateless）的条件概率预测器</strong>：
 - 如果你要求它：“查一下明天北京天气，如果下雨就帮我向主管申请取消明天上午的拜访”，普通对话模型只能凭空编造一个虚假的下雨情况，或者回答“我没有权限访问天气网”；
-- 它无法自主判断<strong>“第一步查天气 $\rightarrow$ 第二步根据天气判断是否发邮件 $\rightarrow$ 第三步生成执行报告”</strong>这一连续的逻辑因果链。</p>
+- 它无法自主判断<strong>“第一步查天气 → 第二步根据天气判断是否发邮件 → 第三步生成执行报告”</strong>这一连续的逻辑因果链。</p>
 <h3 id="22-react">2.2 ReAct 范式的革命性价值</h3>
 <p>ReAct 论文（Synergizing Reasoning and Acting in Language Models）提出了将<strong>推理（Reasoning）</strong>与<strong>行动（Acting）</strong>交替进行的机制：
 - <strong>Thought（思考）</strong>：大模型先向内审视现状：“我当前需要查询北京明天的天气预报”；
@@ -1026,18 +1135,63 @@ uv run uvicorn src.01_fastapi_sse_stream:app --reload --port 8000
 </tr>
 <tr>
 <td style="text-align: left;"><strong>Deep Research</strong></td>
-<td style="text-align: left;">大纲拆解 $\rightarrow$ 并行多路搜索抓取 $\rightarrow$ 交叉事实核查 $\rightarrow$ 深度长文综合</td>
+<td style="text-align: left;">大纲拆解 → 并行多路搜索抓取 → 交叉事实核查 → 深度长文综合</td>
 <td style="text-align: left;">行业深度研报撰写、竞品全景调研、学术综述</td>
 <td style="text-align: left;">执行轮次多（5~15轮），信息丰富度极高</td>
 </tr>
 </tbody>
 </table>
+<h4 id="deep-research">Deep Research 范式多路并行执行拓扑</h4>
+<pre class="mermaid">flowchart TD
+    UserQuery[用户调研诉求: '2026年具身智能商业化落地现状'] --> PlannerNode[1. 规划节点: 拆解研报大纲与核心子问题]
+
+    subgraph ParallelSearch[2. 并行多路事实搜集与抓取 (Map 阶段)]
+        Q1[子问题 A: 核心芯片算力进展] --> Worker1[爬虫 Worker 1: 搜索抓取 10 篇研报]
+        Q2[子问题 B: 四足与双足量产出货量] --> Worker2[爬虫 Worker 2: 行业协会统计数据]
+        Q3[子问题 C: 工业制造典型标杆案例] --> Worker3[爬虫 Worker 3: 领军企业招股书与财报]
+    end
+
+    PlannerNode --> Q1
+    PlannerNode --> Q2
+    PlannerNode --> Q3
+
+    subgraph CrossVerification[3. 交叉事实校验与去重 (Cross-Check)]
+        JudgeNode{事实核验模型: 数据是否矛盾?}
+        Worker1 --> JudgeNode
+        Worker2 --> JudgeNode
+        Worker3 --> JudgeNode
+        JudgeNode -- 存疑数据 --> WebVerification[针对矛盾点定向二次复查]
+        WebVerification --> JudgeNode
+    end
+
+    subgraph Synthesis[4. 最终深度报告综合 (Reduce 阶段)]
+        JudgeNode -- 置信事实列表 --> ReportGenerator[长文本综合生成器: 按大纲结构化组织]
+        ReportGenerator --> CitationCheck[自动注入原始数据引用角标 (Citations)]
+    end
+
+    CitationCheck --> FinalReport[交付 8000 字出版级深度研究报告]
+</pre>
+
 <h3 id="32-12-factor-agents">3.2 生产级设计准则：12-Factor Agents 核心要义</h3>
-<p>借鉴现代微服务 12-Factor 哲学，工业级 Agent 必须遵守以下原则：
-1. <strong>显式状态管理</strong>：会话状态不保存在本地内存变量中，必须持久化在 Redis 或 PostgreSQL 状态机；
-2. <strong>工具无状态化</strong>：每个 Tool 接口必须幂等，入参自包含，不产生未受控的副作用；
-3. <strong>强制循环熔断</strong>：必须为每一个 Agent 会话设置 <code>max_steps</code>（最大步数限制，建议 5~8 次），严禁无休止死循环；
-4. <strong>全链路 Trace 观测</strong>：每一次 Thought、Action 和 Observation 都必须记录 Trace ID，确保可排查、可审计。</p>
+<p>借鉴现代微服务 12-Factor 哲学，工业级 Agent 必须遵守以下原则：</p>
+<pre class="mermaid">flowchart LR
+    subgraph Principles[12-Factor Agents 四大支柱规约]
+        direction TB
+        F1[Factor 1: 显式状态持久化\n禁止内存变量存Session / 拥抱 Redis]
+        F2[Factor 2: 工具接口幂等\n无副作用 / 统一输入输出 DTO Schema]
+        F3[Factor 3: 严格熔断防死循环\n设置硬性 Max Iterations 与退避机制]
+        F4[Factor 4: 全链路分布式追踪\nOpenTelemetry Trace 记录每一步 Thought]
+    end
+
+    Principles --> ProductionReady[生产可用 / 高并发 / 可审计 / 零级事故]
+</pre>
+
+<ol>
+<li><strong>显式状态管理</strong>：会话状态不保存在本地内存变量中，必须持久化在 Redis 或 PostgreSQL 状态机；</li>
+<li><strong>工具无状态化</strong>：每个 Tool 接口必须幂等，入参自包含，不产生未受控的副作用；</li>
+<li><strong>强制循环熔断</strong>：必须为每一个 Agent 会话设置 <code>max_steps</code>（最大步数限制，建议 5~8 次），严禁无休止死循环；</li>
+<li><strong>全链路 Trace 观测</strong>：每一次 Thought、Action 和 Observation 都必须记录 Trace ID，确保可排查、可审计。</li>
+</ol>
 <hr />
 <h2 id="python-react">四、 手把手实操指南：手写原生 Python ReAct 引擎</h2>
 <p>为了让新手彻底看懂底层原理，本节<strong>不依赖 LangChain 或任何三方框架</strong>，直接使用原生 Python 和 OpenAI 官方 SDK 编写一个完整的 ReAct 运行循环。</p>
@@ -1265,6 +1419,19 @@ if __name__ == &quot;__main__&quot;:
     App-->>User: 渲染最终答复
 </pre>
 
+<h4 id="tool-calling_1">Tool Calling 四阶段报文数据结构标准</h4>
+<pre class="mermaid">flowchart LR
+    P1["1. 用户请求报文\n{\n  'role': 'user',\n  'content': '查订单 20260901'\n}"]
+
+    P2["2. 模型决策报文 (Assistant)\n{\n  'role': 'assistant',\n  'tool_calls': [{\n    'id': 'call_abc123',\n    'function': {'name': 'get_order', 'arguments': '{\"id\":\"20260901\"}'}\n  }]\n}"]
+
+    P3["3. 本地工具回填报文 (Tool)\n{\n  'role': 'tool',\n  'tool_call_id': 'call_abc123',\n  'content': '{\"status\":\"运输中\",\"express\":\"顺丰\"}'\n}"]
+
+    P4["4. 最终自然语言答复\n{\n  'role': 'assistant',\n  'content': '您的订单 20260901 正在顺丰承运中...'\n}"]
+
+    P1 --> P2 --> P3 --> P4
+</pre>
+
 <hr />
 <h2 id="_1">二、 业务痛点与技术价值：为什么需要双轨制分流与微调？</h2>
 <h3 id="21">2.1 全量大模型调用的“成本与延迟刺客”</h3>
@@ -1278,11 +1445,46 @@ if __name__ == &quot;__main__&quot;:
     Judge -- 高频固定意图 (如: 打招呼/人工直转) --> CacheResp[直接走本地预设模板/规则回复\n(零 Token 成本 / 15ms 极速响应)]
     Judge -- 复杂业务/多轮意图 (如: 售后查单/政策咨询) --> AgentCore[转发至大模型 Agent 核心\n(结合 Tool Calling 与 RAG 深度推理)]
 </pre>
+
 <ul>
 <li><strong>核心收益</strong>：<strong>在网关层毫秒级拦截 60% 以上的无用 Token 消耗</strong>，将企业大模型服务器资源集中留给需要复杂推理的长尾疑难问题，整体降本达 <strong>60% 以上</strong>。</li>
 </ul>
+<h3 id="23-prompt-cache-kv">2.3 Prompt Cache 底层原理与 KV 显存复用</h3>
+<p>大模型在处理请求时，需要对上下文计算 Key-Value (KV) 向量并载入显存。如果前缀完全相同，服务商（如 OpenAI、DeepSeek、Claude）可以直接复用已经计算好的 KV Cache：</p>
+<pre class="mermaid">flowchart TD
+    subgraph WithoutCache[❌ 无缓存模式 (每次全量重新计算)]
+        Sys1[系统角色 2000字] --> Compute1[全量 Attention 矩阵计算]
+        Tools1[工具说明 5000字] --> Compute1
+        History1[多轮历史 3000字] --> Compute1
+        Query1[新提问 20字] --> Compute1
+        Compute1 --> Cost1[计费: 10020 Tokens 全额付费\n首字延迟: 2500ms]
+    end
+
+    subgraph WithPromptCache[✅ 启用 Prompt Cache 静态前缀锁定]
+        Sys2[固定静态前缀: System Prompt + Tool Schemas (7000字)] --> Hit[⚡ 命中显存已存 KV Cache (零重新计算!)]
+        History2[动态后缀: 会话历史 + 用户新输入] --> Compute2[仅需计算动态增量 (3020字)]
+        Hit & Compute2 --> Cost2[计费: 前缀享受 80%~90% 折扣\n首字延迟: 骤降至 600ms]
+    end
+</pre>
+
 <hr />
-<h2 id="tool-calling_1">三、 应用场景与能力矩阵：Tool Calling 能做什么？</h2>
+<h2 id="tool-calling_2">三、 应用场景与能力矩阵：Tool Calling 与技术选型决策</h2>
+<h3 id="31-fine-tuning-vs-rag-vs-prompt-vs-tool-calling">3.1 微调 (Fine-Tuning) vs RAG vs Prompt vs Tool Calling 选型决策矩阵</h3>
+<pre class="mermaid">quadrantChart
+    title 大模型企业级技术选型象限图
+    x-axis "低实时动态性 (通用/静态规则)" --> "高实时动态性 (实时库存/用户数据)"
+    y-axis "结构灵活性 (自由自然语言)" --> "格式严格性 (严苛代码/专用指令格式)"
+    quadrant-1 "Tool Calling (工具调用)"
+    quadrant-2 "模型微调 (Fine-Tuning)"
+    quadrant-3 "纯 Prompt Engineering"
+    quadrant-4 "检索增强 (RAG 知识库)"
+    "天气查询 / 微信退款 / 数据库读写": [0.85, 0.82]
+    "企业当季售后退货时效政策": [0.80, 0.35]
+    "特定医疗病历结构化输出格式": [0.25, 0.88]
+    "通用邮件客套话 / 翻译 / 润色": [0.20, 0.20]
+</pre>
+
+<h3 id="32">3.2 典型工业级工具类型矩阵表</h3>
 <table>
 <thead>
 <tr>
@@ -1557,14 +1759,59 @@ if __name__ == &quot;__main__&quot;:
    - 向量模型往往把 <code>X90-Pro</code>、<code>X90</code>、<code>X80-Pro</code> 的段落全部召回，因为它们在语义向量空间中的余弦距离极为接近，但实际保修政策完全不同！
 2. <strong>缺乏严格上下文交叉比对</strong>：
    - 向量模型只计算 Query 与 Document 各自向量的夹角，没有让 Query 和 Document 的每一个 Token 在多头注意力机制中进行深度的交叉打分。</p>
+<pre class="mermaid">flowchart TD
+    subgraph BiEncoder[Bi-Encoder 双塔架构 (用于初步粗排召回)]
+        direction LR
+        Q1[用户 Query] --> Tower1[Embedding 模型 A] --> V1[向量 Q]
+        D1[知识切片 Doc] --> Tower2[Embedding 模型 B] --> V2[向量 D]
+        V1 & V2 --> Cosine[余弦相似度计算: cos_sim(Q, D)\n速度极快 / 丢失深度交互]
+    end
+
+    subgraph CrossEncoder[Cross-Encoder 交叉重排架构 (用于高精细排)]
+        direction LR
+        Concat["拼接输入: [CLS] Query [SEP] Document [SEP]"] --> Transformer[深度多层 Transformer 全注意力计算]
+        Transformer --> Score["精准相关度打分: 0.0 ~ 1.0\n算力消耗大 / 极其精确"]
+    end
+
+    BiEncoder -->|初筛 Top 50 候选| CrossEncoder --> FinalTop["输出最终 Top 3~5 事实切片"]
+</pre>
+
 <h3 id="22">2.2 工业级三级流水线的核心突破</h3>
 <ul>
 <li><strong>BM25 稀疏检索</strong>：负责“抓精准”。哪怕这个生僻型号只出现了一次，BM25 也能依靠词频精准命中；</li>
 <li><strong>密集向量检索</strong>：负责“抓泛化”。用户说“退换”，文档写“售后”，向量模型能够轻松建立语义连接；</li>
 <li><strong>BGE-Reranker 重排序</strong>：作为终审裁判，利用 Cross-Encoder 架构对前两路召回的前 50 个候选切片进行细致打分，剔除无关噪点，只留 Top 3~5 精华切片。</li>
 </ul>
+<pre class="mermaid">flowchart LR
+    subgraph DualInput[双路检索结果输入]
+        BM25_List["BM25 检索排名\n#1 Doc_B\n#2 Doc_A\n#3 Doc_C"]
+        Dense_List["Dense 向量检索排名\n#1 Doc_A\n#2 Doc_D\n#3 Doc_B"]
+    end
+
+    subgraph RRF_Engine[RRF 倒数排名融合算法]
+        Formula["RRF 得分公式:\nscore(d) = Σ 1 / (60 + rank(d))"]
+    end
+
+    subgraph FusedOutput[融合排序输出]
+        Result["综合排名 (兼顾精确词频与泛化语义):\n🔥 #1 Doc_B (高分)\n🔥 #2 Doc_A (高分)\n#3 Doc_D\n#4 Doc_C"]
+    end
+
+    DualInput --> RRF_Engine --> FusedOutput
+</pre>
+
 <hr />
 <h2 id="rag_1">三、 应用场景与能力矩阵：工业级 RAG 参数配置标准</h2>
+<h3 id="31-chunking">3.1 工业级文档分块 (Chunking) 四大策略对比</h3>
+<pre class="mermaid">flowchart TD
+    Raw[企业复杂长篇原始文档] --> SplitMethod{选择切分策略}
+
+    SplitMethod -- 1. 固定字符分块 --> FixChunk[简单暴力截断\n可能在句子中间一刀两断 / 不推荐]
+    SplitMethod -- 2. 递归语法树分块 --> RecurChunk[依据段落回车、句号分级切分\n保留完整句子语义 / 工业界主流]
+    SplitMethod -- 3. Parent-Child 父子分块 --> PCChunk[大块存上下文(2000字)，小块建向量索引(200字)\n命中后将父文档注入 LLM / 最佳实践]
+    SplitMethod -- 4. 语义感知分块 --> SemChunk[利用 Embedding 变化剧烈度自动检测断点\n计算开销较高]
+</pre>
+
+<h3 id="32">3.2 生产级配置参数基准表</h3>
 <table>
 <thead>
 <tr>
@@ -1820,7 +2067,7 @@ if __name__ == &quot;__main__&quot;:
 <h3 id="613-what">6.1.3 【能做什么（What）】</h3>
 <p>利用成熟的编排框架，企业可以构建出高稳定、可观测的复杂自动化业务流：
 - <strong>电商多技能客服中心</strong>：自动识别用户意图，流转至售前导购、物流查询或售后退款分支。
-- <strong>自动化代码研发助手</strong>：生成代码 $\rightarrow$ 静态检查 $\rightarrow$ 单元测试 $\rightarrow$ 失败自动反馈 LLM 修复 $\rightarrow$ 成功后提 PR。
+- <strong>自动化代码研发助手</strong>：生成代码 → 静态检查 → 单元测试 → 失败自动反馈 LLM 修复 → 成功后提 PR。
 - <strong>金融风控与投资研报生成</strong>：多智能体协作（收集宏观数据、财报解析、舆情监控），汇总后由主审 Agent 交叉校验。</p>
 <hr />
 <h2 id="62-dify">6.2 零代码/低代码工业基座：Dify 全流程搭建实战</h2>
@@ -1843,9 +2090,23 @@ if __name__ == &quot;__main__&quot;:
 </pre>
 
 <h3 id="621-agent">6.2.1 手把手搭建电商客服 Agent 实操步骤</h3>
+<pre class="mermaid">flowchart LR
+    StartNode([用户开始对话]) --> FilterNode[敏感词与反作弊节点]
+    FilterNode --> ClassifierNode{Dify 意图分类器节点}
+
+    ClassifierNode -- 售后政策咨询 --> KBNode[知识库检索节点\n(混合检索 + BGE Rerank)]
+    ClassifierNode -- 物流订单查询 --> ToolNode[自定义 HTTP 工具节点\n(调用外部 ERP 查询)]
+    ClassifierNode -- 闲聊与打招呼 --> DirectNode[LLM 快速问答节点]
+
+    KBNode --> FormatNode[LLM 组装综合节点\n(注入语气约束与规范)]
+    ToolNode --> FormatNode
+    DirectNode --> EndNode([输出渲染卡片 / 微信终端])
+    FormatNode --> EndNode
+</pre>
+
 <ol>
 <li><strong>第一步：创建企业级知识库</strong></li>
-<li>进入 Dify 控制台，点击顶部【知识库】 $\rightarrow$ 【创建知识库】。</li>
+<li>进入 Dify 控制台，点击顶部【知识库】 → 【创建知识库】。</li>
 <li>上传企业售后政策与常见问题文档（支持 txt、markdown、pdf、docx）。</li>
 <li><strong>分段与清洗设置</strong>：选择“自动”或“通用分块”，分块长度建议 500~800 字符。</li>
 <li><strong>索引方式</strong>：务必勾选【高质量】（调用外部 Embedding 模型），推荐选用 <code>text-embedding-3-small</code> 或 <code>bge-large-zh-v1.5</code>。</li>
@@ -1872,6 +2133,18 @@ if __name__ == &quot;__main__&quot;:
 </pre>
 
 <h3 id="631">6.3.1 核心架构三要素</h3>
+<pre class="mermaid">flowchart LR
+    subgraph Checkpointer[LangGraph Checkpointer 会话持久化与时间旅行]
+        direction TB
+        State0[Step 0 初始状态快照] --> State1[Step 1 决策快照]
+        State1 --> State2[Step 2 工具调用前快照]
+        State2 --> State3[Step 3 异常发生 / 人工挂起]
+        State3 -.->|Time Travel 支持任意回滚| State1
+    end
+
+    Checkpointer --> Redis[(Postgres / Redis 持久化存储)]
+</pre>
+
 <ol>
 <li><strong>State（全局状态载荷）</strong>：整个图流转时共享的数据模型。LangGraph 使用类型注解（如 <code>Annotated[list, operator.add]</code>）指定 Reducer，实现消息的自动增量合并。</li>
 <li><strong>Nodes（节点）</strong>：普通的 Python 函数或可调用对象，入参为当前 <code>State</code>，返回值是一个字典，用来更新 <code>State</code>。</li>
@@ -1948,6 +2221,21 @@ if __name__ == &quot;__main__&quot;:
 <li><strong>Trigger Prompt 范式</strong>：通过结构化的系统提示词强制模型输出当前思考（Thoughts）、推理（Reasoning）、行动计划（Plan）与命令（Command）。</li>
 </ul>
 <h3 id="2-babyagi">2. BabyAGI：任务驱动的自驱循环</h3>
+<pre class="mermaid">flowchart TD
+    TaskQueue[(待办任务优先级队列 Task List)]
+
+    subgraph ExecutionLoop[BabyAGI 三 Agent 自主协同循环]
+        Agent1[1. Execution Agent\n取出队列顶部首个任务并调用 LLM 执行]
+        Agent2[2. Task Creation Agent\n基于执行结果与终极目标，分析衍生新子任务]
+        Agent3[3. Prioritization Agent\n对扩充后的任务队列重新评估优先级并重排]
+    end
+
+    TaskQueue -->|弹出最高优先级任务| Agent1
+    Agent1 -->|传递执行上下文| Agent2
+    Agent2 -->|注入新任务候选集| Agent3
+    Agent3 -->|写回重新排序的待办列表| TaskQueue
+</pre>
+
 <ul>
 <li><strong>三大核心协同 Agent</strong>：</li>
 <li><strong>Execution Agent（执行 Agent）</strong>：负责完成当前待办队列顶部的具体子任务；</li>
@@ -2047,6 +2335,27 @@ if __name__ == &quot;__main__&quot;:
 </pre>
 
 <h3 id="_1">业务难点与生产级应对策略对照表</h3>
+<pre class="mermaid">stateDiagram-v2
+    [*] --> Idle: 监听用户消息
+    Idle --> IntentClassified: 触发意图识别 (BERT/LLM)
+
+    IntentClassified --> SlotFilling: 关键槽位缺失 (如缺少订单号)
+    SlotFilling --> AwaitingUserInput: 反问用户提供补充信息
+    AwaitingUserInput --> SlotFilling: 用户提供订单号
+
+    IntentClassified --> QueryERP: 槽位齐全，调用 ERP 查单
+    SlotFilling --> QueryERP: 槽位补充完毕
+
+    QueryERP --> RiskAudit: 涉及退款操作，触发风控核验
+    RiskAudit --> HumanTakeover: 触发高风险金额 (>200元) / 人工介入
+    RiskAudit --> AutoExecution: 满足免审核极速赔付规则
+
+    AutoExecution --> SummaryAnswer: 执行退款并组织话术
+    HumanTakeover --> SummaryAnswer: 人工坐席批复完成
+
+    SummaryAnswer --> [*]
+</pre>
+
 <table>
 <thead>
 <tr>
@@ -2086,6 +2395,26 @@ if __name__ == &quot;__main__&quot;:
 <hr />
 <h2 id="73-dify">7.3 案例二：基于 Dify 的电商客服智能体搭建实战</h2>
 <p>对于中小电商商家，无需组建昂贵的算法团队，基于 Dify 可在 1 天内搭建具备高质量知识检索和订单查询能力的金牌客服助手。</p>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor Customer as 淘宝/抖音买家
+    participant DifyApp as Dify Chatflow 应用
+    participant VectorDB as 企业知识库 (RAG)
+    participant ERP as 聚水潭/万里牛 ERP
+    participant Finance as 财务审批工作台
+
+    Customer->>DifyApp: "昨天买的草莓烂了一半，怎么退钱？"
+    DifyApp->>VectorDB: 混合检索《生鲜冷链破损赔付标准》
+    VectorDB-->>DifyApp: 召回规则: 24h内拍照凭证可全额极速退款
+    DifyApp->>Customer: 话术安抚并引导上传坏果照片
+    Customer->>DifyApp: 上传实物照片与快递面单
+    DifyApp->>ERP: 调用接口查询订单支付金额与签收时效
+    ERP-->>DifyApp: 订单实付 68 元，签收仅 4 小时，符合理赔条件
+    DifyApp->>Finance: 自动创建极速退款工单流水
+    Finance-->>DifyApp: 原路退款成功通知
+    DifyApp-->>Customer: "亲亲，已为您极速办理 68 元退款，款项将在 2 小时内原路到账！"
+</pre>
+
 <h3 id="1">1. 知识库准备与向量分段规范</h3>
 <ul>
 <li><strong>准备三份核心 Markdown 文档</strong>：</li>
@@ -2223,6 +2552,27 @@ if __name__ == &quot;__main__&quot;:
 <li><strong>Prompt Cache</strong>：锁定 System Prompt 和 Tool Schemas 为静态前缀，命中服务商缓存机制，降低 50%~80% 的推理成本并提升首字响应速度 40%。</li>
 </ul>
 <h3 id="3-circuit-breaker">3. 防死循环熔断器（Circuit Breaker）实操</h3>
+<pre class="mermaid">stateDiagram-v2
+    [*] --> Closed: 系统初始状态 (Closed 正常工作)
+
+    Closed --> Closed: 工具正常返回 / 步数 < 阈值
+    Closed --> Open: 连续 2 次相同参数死锁 OR 步数 > 6
+
+    state Open {
+        [*] --> FastFail: 拒绝继续调用大模型与外部工具
+        FastFail --> TriggerDegradation: 触发降级模板 / 无缝转人工
+    }
+
+    Open --> HalfOpen: 冷却窗口期满 (如等待 60s)
+
+    state HalfOpen {
+        [*] --> CanaryTest: 放行单条探测请求
+    }
+
+    HalfOpen --> Closed: 探测请求成功闭环
+    HalfOpen --> Open: 探测请求再次异常
+</pre>
+
 <p>配套独立生产级脚本 <code>src/08_circuit_breaker.py</code>，支持：
 - 连续重复相同调用熔断；
 - 全局最大步数超限熔断；
@@ -2233,7 +2583,46 @@ if __name__ == &quot;__main__&quot;:
 <hr />
 <h2 id="83-agent">8.3 评估体系：如何科学衡量一个 Agent 的好坏？</h2>
 <p>面试官极爱追问：“你如何证明你的 Agent 优化有效？”必须从<strong>离线评测（Offline）</strong>与<strong>在线监控（Online）</strong>双轮驱动来回答。</p>
-<h3 id="_2">核心指标评估矩阵</h3>
+<h3 id="1-ragas">1. 业界公认 Ragas 评测三元组指标原理</h3>
+<pre class="mermaid">flowchart TD
+    subgraph Triad[Ragas 评测核心三元组]
+        Q[用户提问 Query]
+        C[检索切片 Context]
+        A[生成答复 Answer]
+        GT[真值标签 Ground Truth]
+    end
+
+    C -->|衡量 Context 是否支撑 Answer| M1[Faithfulness 忠实度 / 幻觉率]
+    M1 --> A
+
+    Q -->|衡量 Answer 是否切中要点| M2[Answer Relevance 答案相关性]
+    M2 --> A
+
+    GT -->|衡量 Context 是否完整覆盖真值| M3[Context Recall 上下文召回率]
+    M3 --> C
+
+    Q -->|衡量 Context 中有效信息密度| M4[Context Precision 上下文精准度]
+    M4 --> C
+</pre>
+
+<h3 id="2-trace">2. 生产级全链路可观测体系 (Trace 架构)</h3>
+<pre class="mermaid">flowchart LR
+    User[终端用户] --> TraceRoot[Trace ID: tr-2026-9988\n(全链路透传追踪标识)]
+
+    subgraph Spans[Span 调用树]
+        direction TB
+        S1[Span 1: 网关鉴权与限流 (12ms)]
+        S2[Span 2: 前置 BERT 意图识别 (8ms)]
+        S3[Span 3: 混合 RAG 检索 (45ms)]
+        S4[Span 4: LLM 首字推流 + 生成 (850ms)]
+        S5[Span 5: ERP 工具调用 (120ms)]
+    end
+
+    TraceRoot --> S1 --> S2 --> S3 --> S4 --> S5
+    Spans --> Collector[OpenTelemetry / Jaeger / Prometheus 监控大盘]
+</pre>
+
+<h3 id="3">3. 核心指标评估矩阵</h3>
 <table>
 <thead>
 <tr>
@@ -2270,7 +2659,7 @@ if __name__ == &quot;__main__&quot;:
 </tr>
 </tbody>
 </table>
-<h3 id="_3">业界主流自动化评测工具链</h3>
+<h3 id="4">4. 业界主流自动化评测工具链</h3>
 <ol>
 <li><strong>Ragas</strong>：专注于 RAG 管道评估，涵盖<strong>忠实度（Faithfulness）</strong>、<strong>答案相关性（Answer Relevance）</strong>与<strong>上下文召回率（Context Recall）</strong>；</li>
 <li><strong>TruLens</strong>：评估 Agent 的工具调用准确率与 RAG 三元组（Triad）；</li>
@@ -2327,6 +2716,20 @@ if __name__ == &quot;__main__&quot;:
 <blockquote>
 <p><strong>导读</strong>：本附录为广大开发者提供日常研发与生产调试的<strong>高频工程命令速查</strong>、<strong>核心术语中英文权威对照表</strong>以及<strong>经典论文与开源项目技术导航</strong>，方便随时翻阅查对。</p>
 </blockquote>
+<pre class="mermaid">flowchart TD
+    subgraph Ecosystem[AI Agent 全栈工程师知识与技术生态全景]
+        direction TB
+        E1[现代包管理与服务\nAstral uv / FastAPI / SSE / Pydantic v2]
+        E2[Prompt 与大模型底座\nPrompt Cache / Few-Shot / JSON Mode / vLLM]
+        E3[企业级 RAG 知识大脑\nBM25 / Chroma / Milvus / BGE-Reranker / RRF]
+        E4[工具连接与协议\nOpenAI Tool Calling / Anthropic MCP / OpenAPI]
+        E5[现代状态图编排\nDify / LangGraph / Eino / AutoGPT / BabyAGI]
+        E6[高可用与商业防御\nCircuit Breaker / Ragas 评测 / OpenTelemetry Trace]
+    end
+
+    E1 --> E2 --> E3 --> E4 --> E5 --> E6
+</pre>
+
 <hr />
 <h2 id="a">附录 A：常用工程命令速查</h2>
 <h3 id="a1-python-uv">A.1 Python 现代包管理（uv 与虚拟环境）</h3>
