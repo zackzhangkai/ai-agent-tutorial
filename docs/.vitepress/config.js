@@ -6,14 +6,87 @@ export default withMermaid(
     title: "AI Agent 全栈开发与商业落地教程",
     description: "从 0 到 1 打造可交付、高可用的企业级智能体系统（商业交付版）",
     head: [
-      ['link', { rel: 'icon', href: '/favicon.ico' }]
+      ['link', { rel: 'icon', href: '/favicon.ico' }],
+      ['style', {}, `
+        /* 彻底解决 VitePress 默认段落样式对 Mermaid 图内文字的挤压遮挡 */
+        .vp-doc .mermaid {
+          display: flex;
+          justify-content: center;
+          margin: 28px 0;
+          overflow-x: auto;
+        }
+        .vp-doc .mermaid svg {
+          max-width: 100%;
+          height: auto;
+          overflow: visible !important;
+        }
+        .vp-doc .mermaid svg foreignObject {
+          overflow: visible !important;
+        }
+        .vp-doc .mermaid svg foreignObject div {
+          overflow: visible !important;
+        }
+        .vp-doc .mermaid svg foreignObject p,
+        .vp-doc .mermaid svg .nodeLabel p,
+        .vp-doc .mermaid svg .edgeLabel p,
+        .vp-doc .mermaid svg .cluster-label p {
+          margin: 0 !important;
+          padding: 0 !important;
+          line-height: 1.35 !important;
+        }
+        .vp-doc .mermaid svg .label {
+          line-height: 1.35 !important;
+        }
+        /* 宣传海报推荐容器样式 */
+        .poster-recommend-card {
+          margin: 32px 0;
+          padding: 24px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.05));
+          border: 1px solid var(--vp-c-divider);
+          text-align: center;
+        }
+        .poster-recommend-card h3 {
+          margin-top: 0 !important;
+          margin-bottom: 8px !important;
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: var(--vp-c-brand-1);
+        }
+        .poster-recommend-card p {
+          margin: 4px 0 16px 0 !important;
+          color: var(--vp-c-text-2);
+          font-size: 0.95rem;
+        }
+        .poster-image-wrapper {
+          display: flex;
+          justify-content: center;
+          margin-top: 16px;
+        }
+        .poster-image-wrapper img {
+          max-width: 680px;
+          width: 100%;
+          border-radius: 12px;
+          box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+          border: 1px solid var(--vp-c-divider);
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .poster-image-wrapper img:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 16px 44px rgba(0, 0, 0, 0.18);
+        }
+      `]
     ],
     markdown: {
       lineNumbers: true
     },
     mermaid: {
       theme: 'neutral',
-      securityLevel: 'loose'
+      securityLevel: 'loose',
+      flowchart: {
+        htmlLabels: true,
+        padding: 15
+      }
     },
     themeConfig: {
       nav: [

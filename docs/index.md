@@ -5,6 +5,9 @@ hero:
   name: "AI Agent 全栈开发与商业落地教程"
   text: "从 0 到 1 打造可交付、高可用的企业级智能体系统"
   tagline: "包含 14 步就业成长路线、三元组核心架构、Prompt/RAG/Tool Calling 底座、三大千万级商用交付项目实战、高可用防御与大厂面试通关指南"
+  image:
+    src: /AI_Agent_全知识点双二维码宣传海报.png
+    alt: AI Agent 全栈开发与实战学习海报
   actions:
     - theme: brand
       text: 开始学习 🚀
@@ -33,6 +36,18 @@ features:
     title: 生产高可用与求职面试通关
     details: 防死循环熔断器、Prompt Cache 降本 80%、Ragas 评测指标，配套 STAR 简历范例与大厂面试高频真题。
 ---
+
+## 🌟 官方全景学习图谱 & 微信交流群推荐
+
+<div class="poster-recommend-card">
+  <h3>🎯 AI Agent 全栈开发与实战学习 · 知识全景大图</h3>
+  <p>把知识串成体系，把想法做成项目。扫码添加作者微信（备注 <strong>「AI Agent」</strong>）获取整套离线资料包、源码工程库，并邀请加入 AI 学习交流圈。</p>
+  <div class="poster-image-wrapper">
+    <a href="/AI_Agent_全知识点双二维码宣传海报.png" target="_blank" title="点击查看高清无损原图">
+      <img src="/AI_Agent_全知识点双二维码宣传海报.png" alt="AI Agent 全栈开发与实战学习海报" />
+    </a>
+  </div>
+</div>
 
 ## 教程知识架构全景导图
 
